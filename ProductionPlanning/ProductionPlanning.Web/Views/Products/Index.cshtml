@@ -1,0 +1,27 @@
+@model IEnumerable<ProductionPlanning.Web.Models.Product>
+
+@{
+    ViewData["Title"] = "Proizvodi";
+}
+
+<h1>Proizvodi</h1>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Šifra proizvoda</th>
+            <th>Naziv</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var proizvod in Model)
+        {
+            <tr>
+                <td>@proizvod.Id</td>
+                <td>@proizvod.SifraProizvoda</td>
+                <td>@proizvod.Naziv</td>
+            </tr>
+        }
+    </tbody>
+</table>
