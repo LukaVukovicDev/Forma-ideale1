@@ -1,8 +1,40 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Production Planning";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="dashboard">
+    <header class="dashboard-header">
+        <h1 class="dashboard-title">Planiranje proizvodnje</h1>
+        <p class="dashboard-subtitle">Sistem za operativnu pripremu i terminiranje proizvodnje</p>
+    </header>
+
+    <section class="dashboard-modules" aria-labelledby="modules-heading">
+        <div class="dashboard-section-header">
+            <h2 id="modules-heading">Moduli sistema</h2>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+                <a class="module-card" asp-controller="Products" asp-action="Index">
+                    <span class="module-card-icon" aria-hidden="true">
+                        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M24 5.5 41 14v20L24 42.5 7 34V14L24 5.5Z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" />
+                            <path d="m7.5 14.2 16.5 8.3 16.5-8.3M24 22.5v19M15.5 10l17 8.6v7.7" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" />
+                        </svg>
+                    </span>
+
+                    <span class="module-card-content">
+                        <span class="module-card-title">Proizvodi</span>
+                        <span class="module-card-description">Evidencija i upravljanje proizvodima</span>
+                    </span>
+
+                    <span class="module-card-arrow" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </span>
+                </a>
+            </div>
+        </div>
+    </section>
 </div>
