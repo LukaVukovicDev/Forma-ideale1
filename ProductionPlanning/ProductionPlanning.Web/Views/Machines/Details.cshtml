@@ -1,0 +1,156 @@
+@model ProductionPlanning.Web.ViewModels.MachineDetailsViewModel
+@using System.Text.Json
+
+@{
+    ViewData["Title"] = Model.Name;
+    var days = Model.Statistics.DailyValues;
+}
+
+<section class="machine-details">
+    <header class="machine-details-header">
+        <div>
+            <a asp-action="Index" class="text-decoration-none small">&larr; Nazad na mašine</a>
+            <div class="d-flex flex-wrap align-items-center gap-3 mt-2">
+                <h1 class="machine-details-title mb-0">@Model.Name</h1>
+                @if (Model.IsActive)
+                {
+                    <span class="badge text-bg-success">Aktivna za nove planove</span>
+                }
+                else
+                {
+                    <span class="badge text-bg-danger">Neaktivna za nove planove</span>
+                }
+            </div>
+            <p class="text-secondary mb-0 mt-2">Šifra mašine: <strong>@Model.Code</strong></p>
+        </div>
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary">Izmeni</a>
+    </header>
+
+    <section class="machine-photo-card" aria-label="Ilustracija mašine">
+        <img src="@Model.ImagePath"
+             alt="@(Model.ImagePath.EndsWith(".svg", StringComparison.OrdinalIgnoreCase) ? "Generička ilustracija mašine; fotografija nije dostupna." : $"Fotografija mašine {Model.Name}")"
+             class="machine-photo" />
+        @if (Model.ImagePath.EndsWith(".svg", StringComparison.OrdinalIgnoreCase))
+        {
+            <span class="machine-photo-caption">Generička ilustracija — nije fotografija ove mašine</span>
+        }
+    </section>
+
+    <div class="demo-data-notice" role="note">
+        <strong>DEMO PODACI</strong>
+        <span>Demonstraciona statistika — podaci nisu preuzeti sa mašine.</span>
+    </div>
+
+    <section aria-labelledby="statistics-heading">
+        <div class="machine-section-heading">
+            <div>
+                <h2 id="statistics-heading">Statistika proizvodnje</h2>
+                <p>Poslednjih 7 dana, uključujući današnji dan</p>
+            </div>
+            <span class="badge text-bg-light border">DEMO PODACI</span>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-12 col-sm-6 col-xl-3">
+                <article class="machine-kpi-card">
+                    <span class="machine-kpi-label">Planirana proizvodnja</span>
+                    <strong>@Model.Statistics.PlannedQuantity.ToString("N0")</strong>
+                    <span class="machine-kpi-unit">komada</span>
+                </article>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+                <article class="machine-kpi-card">
+                    <span class="machine-kpi-label">Ostvarena proizvodnja</span>
+                    <strong>@Model.Statistics.ProducedQuantity.ToString("N0")</strong>
+                    <span class="machine-kpi-unit">komada</span>
+                </article>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+                <article class="machine-kpi-card">
+                    <span class="machine-kpi-label">Realizacija plana</span>
+                    <strong>@Model.Statistics.CompletionPercentage.ToString("N1")%</strong>
+                    <span class="machine-kpi-unit">urađeno / planirano</span>
+                </article>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+                <article class="machine-kpi-card">
+                    <span class="machine-kpi-label">Ukupno vreme zastoja</span>
+                    <strong>@Model.Statistics.DowntimeMinutes.ToString("N0")</strong>
+                    <span class="machine-kpi-unit">minuta</span>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <div id="machine-chart-data"
+         data-labels="@JsonSerializer.Serialize(days.Select(day => day.Date.ToString("dd.MM.yyyy.")))"
+         data-planned="@JsonSerializer.Serialize(days.Select(day => day.PlannedQuantity))"
+         data-produced="@JsonSerializer.Serialize(days.Select(day => day.ProducedQuantity))"
+         data-downtime="@JsonSerializer.Serialize(days.Select(day => day.DowntimeMinutes))">
+    </div>
+
+    <section class="row g-4 machine-charts" aria-label="Grafikoni demonstracione statistike">
+        <div class="col-12 col-xl-7">
+            <article class="machine-chart-card">
+                <h2>Planirana i ostvarena proizvodnja</h2>
+                <p class="machine-chart-description">Poređenje planiranih i urađenih komada po danu.</p>
+                <div class="machine-chart-container">
+                    <canvas id="production-chart" role="img"
+                            aria-label="Grafikon planirane i ostvarene proizvodnje za poslednjih sedam dana"></canvas>
+                </div>
+                <details class="machine-data-table">
+                    <summary>Prikaži tabelarne podatke grafikona</summary>
+                    <div class="table-responsive mt-2">
+                        <table class="table table-sm">
+                            <caption>Planirana i ostvarena proizvodnja u komadima</caption>
+                            <thead><tr><th>Datum</th><th>Planirano (kom)</th><th>Urađeno (kom)</th></tr></thead>
+                            <tbody>
+                                @foreach (var day in days)
+                                {
+                                    <tr>
+                                        <th scope="row">@day.Date.ToString("dd.MM.yyyy.")</th>
+                                        <td>@day.PlannedQuantity</td>
+                                        <td>@day.ProducedQuantity</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </details>
+            </article>
+        </div>
+        <div class="col-12 col-xl-5">
+            <article class="machine-chart-card">
+                <h2>Vreme zastoja mašine</h2>
+                <p class="machine-chart-description">Demonstraciono trajanje zastoja po danu.</p>
+                <div class="machine-chart-container">
+                    <canvas id="downtime-chart" role="img"
+                            aria-label="Grafikon vremena zastoja u minutima za poslednjih sedam dana"></canvas>
+                </div>
+                <details class="machine-data-table">
+                    <summary>Prikaži tabelarne podatke grafikona</summary>
+                    <div class="table-responsive mt-2">
+                        <table class="table table-sm">
+                            <caption>Vreme zastoja mašine u minutima</caption>
+                            <thead><tr><th>Datum</th><th>Zastoj (min)</th></tr></thead>
+                            <tbody>
+                                @foreach (var day in days)
+                                {
+                                    <tr>
+                                        <th scope="row">@day.Date.ToString("dd.MM.yyyy.")</th>
+                                        <td>@day.DowntimeMinutes</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </details>
+            </article>
+        </div>
+    </section>
+</section>
+
+@section Scripts {
+    <script src="~/lib/chart.js/chart.umd.min.js" asp-append-version="true"></script>
+    <script src="~/js/machine-details.js" asp-append-version="true"></script>
+}

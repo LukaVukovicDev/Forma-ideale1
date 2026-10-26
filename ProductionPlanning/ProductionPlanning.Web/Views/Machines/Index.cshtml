@@ -1,0 +1,68 @@
+@model IEnumerable<ProductionPlanning.Web.Models.Machine>
+
+@{
+    ViewData["Title"] = "Mašine";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Mašine</h1>
+    <a asp-action="Create" class="btn btn-primary">+ Dodaj mašinu</a>
+</div>
+
+@if (TempData["SuccessMessage"] is string message)
+{
+    <div class="alert alert-success" role="alert">@message</div>
+}
+
+<div class="table-responsive">
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Šifra mašine</th>
+                <th>Naziv</th>
+                <th>Status za nove planove</th>
+                <th>Akcije</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var machine in Model)
+            {
+                <tr>
+                    <td>@machine.Id</td>
+                    <td>@machine.SifraMasine</td>
+                    <td>@machine.Naziv</td>
+                    <td>
+                        @if (machine.IsActive)
+                        {
+                            <span class="badge text-bg-success">Aktivna</span>
+                        }
+                        else
+                        {
+                            <span class="badge text-bg-danger">Neaktivna</span>
+                        }
+                    </td>
+                    <td class="text-end">
+                        <a asp-action="Details"
+                           asp-route-id="@machine.Id"
+                           class="btn btn-sm btn-outline-primary">
+                            Prikaži
+                        </a>
+                        <a asp-action="Edit"
+                           asp-route-id="@machine.Id"
+                           class="btn btn-sm btn-primary">
+                            Izmeni
+                        </a>
+                        <form asp-action="SetActive" method="post" class="d-inline">
+                            <input type="hidden" name="id" value="@machine.Id" />
+                            <input type="hidden" name="isActive" value="@(!machine.IsActive)" />
+                            <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                @(machine.IsActive ? "Deaktiviraj" : "Aktiviraj")
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

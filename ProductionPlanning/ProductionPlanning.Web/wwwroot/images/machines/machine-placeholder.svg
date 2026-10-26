@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 420" role="img" aria-labelledby="title description">
+  <title id="title">Generička ilustracija industrijske mašine</title>
+  <desc id="description">Ilustracija mašine koja nije fotografija konkretne mašine.</desc>
+  <rect width="960" height="420" rx="24" fill="#f3f6f9"/>
+  <path d="M92 342h776" stroke="#b8c7d4" stroke-width="8" stroke-linecap="round"/>
+  <rect x="218" y="130" width="526" height="190" rx="18" fill="#dce7ef" stroke="#7892a6" stroke-width="8"/>
+  <rect x="274" y="90" width="414" height="54" rx="12" fill="#24577e"/>
+  <rect x="286" y="168" width="166" height="112" rx="10" fill="#fff" stroke="#9eb2c2" stroke-width="7"/>
+  <rect x="486" y="168" width="214" height="112" rx="10" fill="#c6d6e2"/>
+  <circle cx="350" cy="224" r="34" fill="#eaf2f9" stroke="#3478a8" stroke-width="8"/>
+  <path d="M510 202h162M510 235h126" stroke="#7892a6" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="290" cy="324" r="24" fill="#526b7e"/>
+  <circle cx="672" cy="324" r="24" fill="#526b7e"/>
+  <text x="480" y="390" fill="#526b7e" font-family="Arial, sans-serif" font-size="21" text-anchor="middle">Generička ilustracija — nije fotografija mašine</text>
+</svg>

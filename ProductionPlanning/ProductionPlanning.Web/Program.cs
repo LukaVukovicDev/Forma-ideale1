@@ -1,9 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using ProductionPlanning.Web.Data;
+using ProductionPlanning.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
+builder.Services.AddSingleton<MachineStatisticsService>();
 
 var connectionString = builder.Configuration
     .GetConnectionString("DefaultConnection")

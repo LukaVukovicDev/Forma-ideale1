@@ -1,0 +1,43 @@
+@model IEnumerable<ProductionPlanning.Web.ViewModels.ProductionRecordIndexViewModel>
+
+@{
+    ViewData["Title"] = "Urađeno";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Urađeno</h1>
+    <a asp-action="Create" class="btn btn-primary">+ Evidentiraj proizvodnju</a>
+</div>
+
+@if (TempData["SuccessMessage"] is string message)
+{
+    <div class="alert alert-success" role="alert">@message</div>
+}
+
+<div class="table-responsive">
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>ID zapisa</th>
+                <th>Proizvod</th>
+                <th>Mašina</th>
+                <th>Datum planirane proizvodnje</th>
+                <th class="text-end">Evidentirana količina</th>
+                <th>Vreme evidentiranja (UTC)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var record in Model)
+            {
+                <tr>
+                    <td>@record.Id</td>
+                    <td>@record.ProductCode — @record.ProductName</td>
+                    <td>@record.MachineCode — @record.MachineName</td>
+                    <td>@record.PlannedDate.ToString("dd.MM.yyyy.")</td>
+                    <td class="text-end">@record.Quantity</td>
+                    <td>@record.RecordedAtUtc.ToString("dd.MM.yyyy. HH:mm:ss") UTC</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

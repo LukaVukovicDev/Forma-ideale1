@@ -1,0 +1,48 @@
+@model ProductionPlanning.Web.ViewModels.CreateProductionRecordViewModel
+
+@{
+    ViewData["Title"] = "Evidentiranje proizvodnje";
+}
+
+<h1>Evidentiranje proizvodnje</h1>
+<hr />
+
+@if (Model.PlannedProductions.Count == 0)
+{
+    <div class="alert alert-warning" role="alert">
+        Ne postoji nijedan plan proizvodnje. Prvo napravite plan na stranici
+        <a asp-controller="PlannedProductions" asp-action="Index">Planirana proizvodnja</a>.
+    </div>
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Create" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <div class="mb-3">
+                <label asp-for="PlannedProductionId" class="form-label"></label>
+                <select asp-for="PlannedProductionId"
+                        asp-items="Model.PlannedProductions"
+                        class="form-select">
+                    <option value="0">Izaberite plan</option>
+                </select>
+                <span asp-validation-for="PlannedProductionId" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Quantity" class="form-label"></label>
+                <input asp-for="Quantity" type="number" min="1" step="1" class="form-control" />
+                <span asp-validation-for="Quantity" class="text-danger"></span>
+            </div>
+
+            <p class="text-muted">Vreme evidentiranja određuje server u UTC vremenskoj zoni.</p>
+            <button type="submit" class="btn btn-primary">Evidentiraj</button>
+            <a asp-controller="ProductionRecords" asp-action="Index" class="btn btn-secondary">Otkaži</a>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
