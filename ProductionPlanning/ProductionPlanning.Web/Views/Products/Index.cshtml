@@ -4,7 +4,22 @@
     ViewData["Title"] = "Proizvodi";
 }
 
-<h1>Proizvodi</h1>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Proizvodi</h1>
+
+    <a asp-controller="Products"
+       asp-action="Create"
+       class="btn btn-primary">
+        + Dodaj proizvod
+    </a>
+</div>
+
+@if (TempData["SuccessMessage"] is string message)
+{
+    <div class="alert alert-success" role="alert">
+        @message
+    </div>
+}
 
 <table class="table table-striped">
     <thead>
@@ -15,12 +30,12 @@
         </tr>
     </thead>
     <tbody>
-        @foreach (var proizvod in Model)
+        @foreach (var product in Model)
         {
             <tr>
-                <td>@proizvod.Id</td>
-                <td>@proizvod.SifraProizvoda</td>
-                <td>@proizvod.Naziv</td>
+                <td>@product.Id</td>
+                <td>@product.SifraProizvoda</td>
+                <td>@product.Naziv</td>
             </tr>
         }
     </tbody>
