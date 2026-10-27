@@ -33,6 +33,13 @@ public class ProductRoutesController(
             return NotFound();
         }
 
+        if (await HasScheduledOperationsForProductAsync(viewModel.ProductId, cancellationToken))
+        {
+            TempData["ErrorMessage"] =
+                "Ruta nije moguće menjati dok postoje zakazane operacije njenih proizvodnih naloga.";
+            return RedirectToAction(nameof(Edit), new { id = viewModel.ProductId });
+        }
+
         var operation = await dbContext.OperationDefinitions
             .SingleOrDefaultAsync(
                 item => item.Id == viewModel.OperationDefinitionId && item.IsActive,
@@ -101,6 +108,13 @@ public class ProductRoutesController(
             return NotFound();
         }
 
+        if (await HasScheduledOperationsForProductAsync(viewModel.ProductId, cancellationToken))
+        {
+            TempData["ErrorMessage"] =
+                "Rutu nije moguće menjati dok postoje zakazane operacije njenih proizvodnih naloga.";
+            return RedirectToAction(nameof(Edit), new { id = viewModel.ProductId });
+        }
+
         var targetOperation = await dbContext.OperationDefinitions
             .SingleOrDefaultAsync(
                 item => item.Id == viewModel.OperationDefinitionId,
@@ -141,6 +155,13 @@ public class ProductRoutesController(
         if (step is null)
         {
             return NotFound();
+        }
+
+        if (await HasScheduledOperationsForProductAsync(viewModel.ProductId, cancellationToken))
+        {
+            TempData["ErrorMessage"] =
+                "Rutu nije moguće menjati dok postoje zakazane operacije njenih proizvodnih naloga.";
+            return RedirectToAction(nameof(Edit), new { id = viewModel.ProductId });
         }
 
         var operation = await dbContext.OperationDefinitions
@@ -196,6 +217,13 @@ public class ProductRoutesController(
         if (step is null)
         {
             return NotFound();
+        }
+
+        if (await HasScheduledOperationsForProductAsync(productId, cancellationToken))
+        {
+            TempData["ErrorMessage"] =
+                "Rutu nije moguće menjati dok postoje zakazane operacije njenih proizvodnih naloga.";
+            return RedirectToAction(nameof(Edit), new { id = productId });
         }
 
         await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -302,6 +330,13 @@ public class ProductRoutesController(
             return NotFound();
         }
 
+        if (await HasScheduledOperationsForProductAsync(productId, cancellationToken))
+        {
+            TempData["ErrorMessage"] =
+                "Rutu nije moguće menjati dok postoje zakazane operacije njenih proizvodnih naloga.";
+            return RedirectToAction(nameof(Edit), new { id = productId });
+        }
+
         var newOrder = sequenceService.Move(
             routeSteps.Select(item => item.Id).ToArray(),
             stepId,
@@ -352,4 +387,12 @@ public class ProductRoutesController(
             cancellationToken);
         return editor is null ? NotFound() : View(nameof(Edit), editor);
     }
+
+    private Task<bool> HasScheduledOperationsForProductAsync(
+        int productId,
+        CancellationToken cancellationToken) =>
+        dbContext.ScheduledProductionOperations
+            .AnyAsync(
+                item => item.PlannedProduction.ProductId == productId,
+                cancellationToken);
 }

@@ -12,6 +12,7 @@ builder.Services.AddSingleton<RouteCalculationService>();
 builder.Services.AddSingleton<RouteSequenceService>();
 builder.Services.AddScoped<ProductRouteService>();
 builder.Services.AddScoped<MachineAvailabilityService>();
+builder.Services.AddScoped<ProductionSchedulingService>();
 builder.Services.AddSingleton<DemoOperationCatalogImporter>();
 
 var connectionString = builder.Configuration

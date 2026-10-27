@@ -38,6 +38,9 @@ public class ApplicationDbContext : DbContext
     public DbSet<MachineCalendarException> MachineCalendarExceptions =>
         Set<MachineCalendarException>();
 
+    public DbSet<ScheduledProductionOperation> ScheduledProductionOperations =>
+        Set<ScheduledProductionOperation>();
+
     protected override void OnModelCreating(
         ModelBuilder modelBuilder)
     {
@@ -312,6 +315,56 @@ public class ApplicationDbContext : DbContext
             entity.HasOne(calendarException => calendarException.Machine)
                 .WithMany(machine => machine.CalendarExceptions)
                 .HasForeignKey(calendarException => calendarException.MachineId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<ScheduledProductionOperation>(entity =>
+        {
+            entity.ToTable("ScheduledProductionOperations", table =>
+                table.HasCheckConstraint(
+                    "CK_ScheduledProductionOperations_TimeRange",
+                    "\"StartAtUtc\" < \"EndAtUtc\""));
+
+            entity.HasKey(schedule => schedule.Id);
+
+            entity.HasIndex(schedule => new
+            {
+                schedule.PlannedProductionId,
+                schedule.ProductOperationId
+            }).IsUnique();
+
+            entity.HasIndex(schedule => new
+            {
+                schedule.MachineId,
+                schedule.StartAtUtc,
+                schedule.EndAtUtc
+            });
+
+            entity.Property(schedule => schedule.StartAtUtc)
+                .HasConversion(
+                    value => value.Ticks,
+                    ticks => new DateTime(ticks, DateTimeKind.Utc))
+                .HasColumnType("INTEGER");
+
+            entity.Property(schedule => schedule.EndAtUtc)
+                .HasConversion(
+                    value => value.Ticks,
+                    ticks => new DateTime(ticks, DateTimeKind.Utc))
+                .HasColumnType("INTEGER");
+
+            entity.HasOne(schedule => schedule.PlannedProduction)
+                .WithMany(plan => plan.ScheduledOperations)
+                .HasForeignKey(schedule => schedule.PlannedProductionId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(schedule => schedule.ProductOperation)
+                .WithMany(step => step.ScheduledOperations)
+                .HasForeignKey(schedule => schedule.ProductOperationId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(schedule => schedule.Machine)
+                .WithMany(machine => machine.ScheduledOperations)
+                .HasForeignKey(schedule => schedule.MachineId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
     }

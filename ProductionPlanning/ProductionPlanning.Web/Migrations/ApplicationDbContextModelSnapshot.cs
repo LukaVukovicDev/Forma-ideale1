@@ -328,6 +328,42 @@ namespace ProductionPlanning.Web.Migrations
                         });
                 });
 
+            modelBuilder.Entity("ProductionPlanning.Web.Models.ScheduledProductionOperation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("EndAtUtc")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("MachineId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("PlannedProductionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ProductOperationId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("StartAtUtc")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductOperationId");
+
+                    b.HasIndex("PlannedProductionId", "ProductOperationId")
+                        .IsUnique();
+
+                    b.HasIndex("MachineId", "StartAtUtc", "EndAtUtc");
+
+                    b.ToTable("ScheduledProductionOperations", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_ScheduledProductionOperations_TimeRange", "\"StartAtUtc\" < \"EndAtUtc\"");
+                        });
+                });
+
             modelBuilder.Entity("ProductionPlanning.Web.Models.MachineBreak", b =>
                 {
                     b.HasOne("ProductionPlanning.Web.Models.Machine", "Machine")
@@ -429,6 +465,33 @@ namespace ProductionPlanning.Web.Migrations
                     b.Navigation("PlannedProduction");
                 });
 
+            modelBuilder.Entity("ProductionPlanning.Web.Models.ScheduledProductionOperation", b =>
+                {
+                    b.HasOne("ProductionPlanning.Web.Models.Machine", "Machine")
+                        .WithMany("ScheduledOperations")
+                        .HasForeignKey("MachineId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ProductionPlanning.Web.Models.PlannedProduction", "PlannedProduction")
+                        .WithMany("ScheduledOperations")
+                        .HasForeignKey("PlannedProductionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ProductionPlanning.Web.Models.ProductOperation", "ProductOperation")
+                        .WithMany("ScheduledOperations")
+                        .HasForeignKey("ProductOperationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Machine");
+
+                    b.Navigation("PlannedProduction");
+
+                    b.Navigation("ProductOperation");
+                });
+
             modelBuilder.Entity("ProductionPlanning.Web.Models.Machine", b =>
                 {
                     b.Navigation("Breaks");
@@ -438,6 +501,8 @@ namespace ProductionPlanning.Web.Migrations
                     b.Navigation("OperationCapabilities");
 
                     b.Navigation("PlannedProductions");
+
+                    b.Navigation("ScheduledOperations");
 
                     b.Navigation("WorkingIntervals");
                 });
@@ -452,11 +517,18 @@ namespace ProductionPlanning.Web.Migrations
             modelBuilder.Entity("ProductionPlanning.Web.Models.PlannedProduction", b =>
                 {
                     b.Navigation("ProductionRecords");
+
+                    b.Navigation("ScheduledOperations");
                 });
 
             modelBuilder.Entity("ProductionPlanning.Web.Models.Product", b =>
                 {
                     b.Navigation("ProductOperations");
+                });
+
+            modelBuilder.Entity("ProductionPlanning.Web.Models.ProductOperation", b =>
+                {
+                    b.Navigation("ScheduledOperations");
                 });
 #pragma warning restore 612, 618
         }

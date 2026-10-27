@@ -1,0 +1,274 @@
+@model ProductionPlanning.Web.ViewModels.ProductionSchedulingViewModel
+
+@{
+    ViewData["Title"] = "Ručno terminiranje proizvodnje";
+    var defaultStart = Model.SelectedDate.ToString("yyyy-MM-dd") + "T08:00";
+}
+
+<header class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div>
+        <h1 class="h2 mb-1">Ručno terminiranje proizvodnje</h1>
+        <p class="text-secondary mb-0">Dodela operacija mašinama prema tehnološkoj ruti i kalendaru rada.</p>
+    </div>
+    <a asp-action="Index" asp-route-date="@Model.SelectedDate" class="btn btn-outline-primary">Osveži raspored</a>
+</header>
+
+@if (TempData["SuccessMessage"] is string success)
+{
+    <div class="alert alert-success" role="status">@success</div>
+}
+@if (TempData["ErrorMessage"] is string error)
+{
+    <div class="alert alert-danger" role="alert">@error</div>
+}
+
+<section class="card shadow-sm mb-4" aria-labelledby="schedule-operation-heading">
+    <div class="card-body">
+        <h2 id="schedule-operation-heading" class="h5">Zakaži sledeću operaciju</h2>
+        @if (Model.UnscheduledOperations.Count == 0)
+        {
+            <p class="text-secondary mb-0">
+                Nema nezakazanih operacija u rutama postojećih proizvodnih naloga.
+                Proverite da li nalozi imaju definisane tehnološke rute.
+            </p>
+        }
+        else
+        {
+            <form asp-action="Schedule" method="post" id="schedule-form" class="row g-3 align-items-end">
+                <input type="hidden" name="plannedProductionId" id="planned-production-id" />
+                <input type="hidden" name="productOperationId" id="product-operation-id" />
+                <input type="hidden" name="date" value="@Model.SelectedDate.ToString("yyyy-MM-dd")" />
+                <div class="col-12 col-xl-5">
+                    <label class="form-label" for="operation-choice">Nalog i operacija</label>
+                    <select class="form-select" id="operation-choice" required>
+                        <option value="">Izaberite nezakazanu operaciju</option>
+                        @foreach (var operation in Model.UnscheduledOperations)
+                        {
+                            var key = $"{operation.PlannedProductionId}:{operation.ProductOperationId}";
+                            <option value="@key"
+                                    data-plan-id="@operation.PlannedProductionId"
+                                    data-step-id="@operation.ProductOperationId"
+                                    data-operation-id="@operation.OperationDefinitionId"
+                                    data-duration="@operation.DurationSeconds"
+                                    data-planned-date="@operation.PlannedDate.ToString("yyyy-MM-dd")"
+                                    disabled="@(!operation.CanSchedule)">
+                                @($"Nalog #{operation.PlannedProductionId} — {operation.ProductCode} / {operation.ProductName} — planirani datum {operation.PlannedDate:dd.MM.yyyy.} — {operation.SequenceNumber}. {operation.OperationName} — {operation.Quantity} kom")
+                                @if (operation.SchedulingBlockReason is not null)
+                                {
+                                    @($" (nije dostupno: {operation.SchedulingBlockReason})")
+                                }
+                            </option>
+                        }
+                    </select>
+                    <div class="form-text" id="operation-duration">Trajanje se računa iz normativa rute i količine naloga.</div>
+                </div>
+                <div class="col-12 col-md-6 col-xl-3">
+                    <label class="form-label" for="machine-choice">Kompatibilna mašina</label>
+                    <select class="form-select" id="machine-choice" name="machineId" required disabled>
+                        <option value="">Prvo izaberite operaciju</option>
+                        @foreach (var machine in Model.Machines)
+                        {
+                            var operationIds = string.Join(",", machine.OperationDefinitionIds);
+                            <option value="@machine.Id" data-operation-ids="@operationIds">
+                                @machine.Code — @machine.Name
+                            </option>
+                        }
+                    </select>
+                    @if (Model.Machines.Count == 0)
+                    {
+                        <div class="form-text text-danger">Nema aktivnih mašina sa podešenom kompatibilnošću.</div>
+                    }
+                </div>
+                <div class="col-12 col-md-6 col-xl-2">
+                    <label class="form-label" for="local-start">Početak (Europe/Belgrade)</label>
+                    <input class="form-control" id="local-start" name="localStart" type="datetime-local"
+                           value="@defaultStart" step="60" required />
+                </div>
+                <div class="col-12 col-xl-2">
+                    <button class="btn btn-primary w-100" id="schedule-button" type="submit" disabled>Zakaži operaciju</button>
+                </div>
+                <div class="col-12">
+                    <p class="small text-secondary mb-0" id="expected-end">
+                        Vreme završetka izračunava se automatski. Ceo termin mora stati u jedan raspoloživ radni interval.
+                    </p>
+                </div>
+            </form>
+        }
+    </div>
+</section>
+
+<section class="card shadow-sm mb-4" aria-labelledby="gantt-heading">
+    <div class="card-body">
+        <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-3">
+            <div>
+                <h2 id="gantt-heading" class="h5 mb-1">Gantt dijagram</h2>
+                <p class="small text-secondary mb-0">Prikaz zakazanih operacija po mašini za jedan dan. Vremenska zona: Europe/Belgrade.</p>
+            </div>
+            <form asp-action="Index" method="get" class="d-flex gap-2 align-items-end">
+                <div>
+                    <label class="form-label" for="gantt-date">Datum pregleda</label>
+                    <input class="form-control" id="gantt-date" name="date" type="date"
+                           value="@Model.SelectedDate.ToString("yyyy-MM-dd")" />
+                </div>
+                <button class="btn btn-outline-primary" type="submit">Prikaži</button>
+            </form>
+        </div>
+
+        <div class="gantt-time-axis" aria-hidden="true">
+            <span>00:00</span><span>04:00</span><span>08:00</span><span>12:00</span><span>16:00</span><span>20:00</span><span>24:00</span>
+        </div>
+        @if (Model.MachineRows.Count == 0)
+        {
+            <p class="text-secondary">Nema evidentiranih mašina.</p>
+        }
+        else
+        {
+            <div class="gantt-board">
+                @foreach (var row in Model.MachineRows)
+                {
+                    <div class="gantt-row">
+                        <div class="gantt-machine-label">
+                            <strong>@row.MachineCode</strong>
+                            <span>@row.MachineName</span>
+                        </div>
+                        <div class="gantt-track" aria-label="Raspored mašine @row.MachineCode">
+                            @foreach (var item in row.Operations)
+                            {
+                                <div class="gantt-operation"
+                                     style="left:@item.LeftPercent.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)%;width:@item.WidthPercent.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)%;background-color:@item.Color"
+                                     title="@($"Nalog #{item.PlannedProductionId} — {item.ProductCode} {item.ProductName}; {item.OperationName}; mašina {item.MachineCode}; {item.StartAtLocal:dd.MM.yyyy. HH:mm}–{item.EndAtLocal:HH:mm}; {item.DurationMinutes} min")">
+                                    <span>@($"#{item.PlannedProductionId} · {item.OperationName}")</span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+        @if (Model.ScheduledOperations.Count > 0)
+        {
+            <div class="table-responsive mt-4">
+                <table class="table table-sm table-striped align-middle">
+                    <thead>
+                        <tr><th>Nalog / proizvod</th><th>Operacija</th><th>Mašina</th><th>Početak</th><th>Završetak</th><th>Trajanje</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.ScheduledOperations.OrderBy(item => item.StartAtLocal))
+                        {
+                            <tr>
+                                <td>#@item.PlannedProductionId — @item.ProductCode / @item.ProductName</td>
+                                <td>@item.SequenceNumber. @item.OperationName</td>
+                                <td>@item.MachineCode — @item.MachineName</td>
+                                <td>@item.StartAtLocal.ToString("dd.MM.yyyy. HH:mm")</td>
+                                <td>@item.EndAtLocal.ToString("dd.MM.yyyy. HH:mm")</td>
+                                <td>@item.DurationMinutes min</td>
+                                <td>
+                                    <form asp-action="Cancel" method="post">
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <input type="hidden" name="date" value="@Model.SelectedDate.ToString("yyyy-MM-dd")" />
+                                        <button class="btn btn-sm btn-outline-danger" type="submit">Otkaži</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <p class="text-secondary mt-3 mb-0">Za izabrani datum nema zakazanih operacija.</p>
+        }
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        (() => {
+            const operation = document.getElementById("operation-choice");
+            const machine = document.getElementById("machine-choice");
+            const planId = document.getElementById("planned-production-id");
+            const stepId = document.getElementById("product-operation-id");
+            const start = document.getElementById("local-start");
+            const durationLabel = document.getElementById("operation-duration");
+            const expectedEnd = document.getElementById("expected-end");
+            const submit = document.getElementById("schedule-button");
+
+            if (!operation || !machine || !start) return;
+
+            const update = () => {
+                const selected = operation.selectedOptions[0];
+                const operationId = selected?.dataset.operationId;
+                planId.value = selected?.dataset.planId ?? "";
+                stepId.value = selected?.dataset.stepId ?? "";
+                const plannedDate = selected?.dataset.plannedDate;
+                if (plannedDate && (!start.value || start.value.slice(0, 10) < plannedDate)) {
+                    start.value = `${plannedDate}T08:00`;
+                }
+
+                let compatibleCount = 0;
+                for (const option of machine.options) {
+                    if (!option.value) continue;
+                    const compatible = (option.dataset.operationIds ?? "")
+                        .split(",").includes(operationId ?? "");
+                    option.hidden = !compatible;
+                    option.disabled = !compatible;
+                    if (compatible) compatibleCount++;
+                }
+                machine.disabled = !operationId || compatibleCount === 0;
+                if (machine.selectedOptions[0]?.disabled) machine.value = "";
+                submit.disabled = !selected?.value || !operationId || !machine.value;
+
+                const duration = Number(selected?.dataset.duration ?? 0);
+                if (duration > 0) {
+                    const hours = Math.floor(duration / 3600);
+                    const minutes = Math.floor(duration % 3600 / 60);
+                    const seconds = duration % 60;
+                    durationLabel.textContent = `Normirano trajanje: ${hours} h ${minutes} min ${seconds} sek.`;
+                    updateEnd(duration);
+                } else {
+                    durationLabel.textContent = "Trajanje se računa iz normativa rute i količine naloga.";
+                    expectedEnd.textContent = "Vreme završetka izračunava se automatski.";
+                }
+            };
+
+            const updateEnd = (duration) => {
+                if (!start.value || duration <= 0) {
+                    expectedEnd.textContent = "Izaberite operaciju i početak da biste videli očekivani završetak.";
+                    return;
+                }
+                const [date, time] = start.value.split("T");
+                const [year, month, day] = date.split("-").map(Number);
+                const [hour, minute] = time.split(":").map(Number);
+                const wallClock = Date.UTC(year, month - 1, day, hour, minute);
+                let startUtc = wallClock;
+                const belgradeClock = new Intl.DateTimeFormat("en-GB", {
+                    timeZone: "Europe/Belgrade",
+                    year: "numeric", month: "2-digit", day: "2-digit",
+                    hour: "2-digit", minute: "2-digit", second: "2-digit",
+                    hourCycle: "h23"
+                });
+                for (let attempt = 0; attempt < 2; attempt++) {
+                    const parts = Object.fromEntries(
+                        belgradeClock.formatToParts(new Date(startUtc))
+                            .filter(part => part.type !== "literal")
+                            .map(part => [part.type, Number(part.value)]));
+                    const representedWallClock = Date.UTC(
+                        parts.year, parts.month - 1, parts.day,
+                        parts.hour, parts.minute, parts.second);
+                    startUtc = wallClock - (representedWallClock - startUtc);
+                }
+                const end = new Date(startUtc + duration * 1000);
+                expectedEnd.textContent = `Očekivani završetak: ${new Intl.DateTimeFormat("sr-Latn-RS", {
+                    timeZone: "Europe/Belgrade", dateStyle: "short", timeStyle: "short"
+                }).format(end)} (Europe/Belgrade).`;
+            };
+
+            operation.addEventListener("change", update);
+            machine.addEventListener("change", update);
+            start.addEventListener("input", () => updateEnd(Number(operation.selectedOptions[0]?.dataset.duration ?? 0)));
+            update();
+        })();
+    </script>
+}

@@ -20,4 +20,7 @@ public class PlannedProduction
 
     public ICollection<ProductionRecord> ProductionRecords { get; set; } =
         new List<ProductionRecord>();
+
+    public ICollection<ScheduledProductionOperation> ScheduledOperations { get; set; } =
+        new List<ScheduledProductionOperation>();
 }

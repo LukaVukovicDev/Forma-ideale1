@@ -24,4 +24,7 @@ public class Machine
 
     public ICollection<MachineCalendarException> CalendarExceptions { get; set; } =
         new List<MachineCalendarException>();
+
+    public ICollection<ScheduledProductionOperation> ScheduledOperations { get; set; } =
+        new List<ScheduledProductionOperation>();
 }

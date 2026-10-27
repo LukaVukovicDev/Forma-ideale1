@@ -17,4 +17,7 @@ public class ProductOperation
     public Product Product { get; set; } = null!;
 
     public OperationDefinition OperationDefinition { get; set; } = null!;
+
+    public ICollection<ScheduledProductionOperation> ScheduledOperations { get; set; } =
+        new List<ScheduledProductionOperation>();
 }

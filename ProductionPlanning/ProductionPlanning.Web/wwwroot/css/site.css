@@ -699,3 +699,88 @@ body {
     border-radius: 2px;
     vertical-align: -0.05rem;
 }
+
+.gantt-time-axis {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    margin-left: min(13rem, 32%);
+    color: #6c757d;
+    font-size: 0.75rem;
+}
+
+.gantt-time-axis span:not(:first-child) {
+    text-align: center;
+}
+
+.gantt-time-axis span:last-child {
+    text-align: right;
+}
+
+.gantt-board {
+    overflow-x: auto;
+}
+
+.gantt-row {
+    display: grid;
+    grid-template-columns: minmax(10rem, 13rem) minmax(38rem, 1fr);
+    min-height: 3.8rem;
+    border-top: 1px solid #e5e9ed;
+}
+
+.gantt-machine-label {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0.4rem 0.75rem 0.4rem 0;
+    font-size: 0.85rem;
+}
+
+.gantt-machine-label span {
+    color: #6c757d;
+    font-size: 0.75rem;
+}
+
+.gantt-track {
+    position: relative;
+    min-height: 3.8rem;
+    background-color: #f7f8fa;
+    background-image: repeating-linear-gradient(
+        to right,
+        transparent 0,
+        transparent calc(16.666% - 1px),
+        #dfe4e9 calc(16.666% - 1px),
+        #dfe4e9 16.666%
+    );
+}
+
+.gantt-operation {
+    position: absolute;
+    top: 0.55rem;
+    min-width: 0.5rem;
+    height: 2.7rem;
+    overflow: hidden;
+    padding: 0.45rem 0.5rem;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 0.35rem;
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (max-width: 575.98px) {
+    .gantt-time-axis {
+        margin-left: 0;
+    }
+
+    .gantt-machine-label {
+        grid-column: 1 / -1;
+        padding-bottom: 0;
+    }
+
+    .gantt-row {
+        grid-template-columns: minmax(38rem, 1fr);
+        padding-bottom: 0.4rem;
+    }
+}
