@@ -318,6 +318,14 @@ body {
   color: #24577e;
 }
 
+.downtime-intervals summary {
+  width: fit-content;
+}
+
+.downtime-intervals li + li {
+  margin-top: 0.25rem;
+}
+
 @media (max-width: 575.98px) {
   .machine-details-header,
   .machine-section-heading {

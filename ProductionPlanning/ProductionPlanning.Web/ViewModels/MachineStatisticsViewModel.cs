@@ -23,4 +23,16 @@ public class MachineDailyStatisticsViewModel
     public int ProducedQuantity { get; init; }
 
     public int DowntimeMinutes { get; init; }
+
+    public IReadOnlyList<MachineDowntimeIntervalViewModel> DowntimeIntervals { get; init; } =
+        [];
+}
+
+public class MachineDowntimeIntervalViewModel
+{
+    public TimeOnly StartTime { get; init; }
+
+    public TimeOnly EndTime { get; init; }
+
+    public int DurationMinutes { get; init; }
 }

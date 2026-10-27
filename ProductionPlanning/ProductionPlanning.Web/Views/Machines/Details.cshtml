@@ -132,12 +132,41 @@
                     <div class="table-responsive mt-2">
                         <table class="table table-sm">
                             <caption>Vreme zastoja mašine u minutima</caption>
-                            <thead><tr><th>Datum</th><th>Zastoj (min)</th></tr></thead>
+                            <thead><tr><th>Datum</th><th>Intervali zastoja</th><th>Ukupno (min)</th></tr></thead>
                             <tbody>
                                 @foreach (var day in days)
                                 {
                                     <tr>
                                         <th scope="row">@day.Date.ToString("dd.MM.yyyy.")</th>
+                                        <td>
+                                            @if (day.DowntimeIntervals.Count > 1)
+                                            {
+                                                <details class="downtime-intervals">
+                                                    <summary>@day.DowntimeIntervals.Count intervala</summary>
+                                                    <ul class="list-unstyled mb-0 mt-2">
+                                                        @foreach (var interval in day.DowntimeIntervals)
+                                                        {
+                                                            <li>
+                                                                @interval.StartTime.ToString("HH:mm")–@interval.EndTime.ToString("HH:mm")
+                                                                <span class="text-secondary">(@interval.DurationMinutes min)</span>
+                                                            </li>
+                                                        }
+                                                    </ul>
+                                                </details>
+                                            }
+                                            else if (day.DowntimeIntervals.Count == 1)
+                                            {
+                                                var interval = day.DowntimeIntervals[0];
+                                                <span>
+                                                    @interval.StartTime.ToString("HH:mm")–@interval.EndTime.ToString("HH:mm")
+                                                    <span class="text-secondary">(@interval.DurationMinutes min)</span>
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-secondary">Bez zastoja</span>
+                                            }
+                                        </td>
                                         <td>@day.DowntimeMinutes</td>
                                     </tr>
                                 }
