@@ -2,6 +2,18 @@ namespace ProductionPlanning.Web.Services;
 
 public class RouteSequenceService
 {
+    public IReadOnlyList<int> Remove(
+        IReadOnlyList<int> stepIdsInOrder,
+        int stepId)
+    {
+        if (!stepIdsInOrder.Contains(stepId))
+        {
+            throw new ArgumentException("Korak nije deo prosleđene rute.", nameof(stepId));
+        }
+
+        return stepIdsInOrder.Where(candidate => candidate != stepId).ToArray();
+    }
+
     public IReadOnlyList<int> Move(
         IReadOnlyList<int> stepIdsInOrder,
         int stepId,

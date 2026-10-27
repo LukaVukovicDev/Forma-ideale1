@@ -11,7 +11,18 @@
         <h1 class="mt-2 mb-1">Tehnološka ruta</h1>
         <p class="text-secondary mb-0">@Model.ProductCode — @Model.ProductName</p>
     </div>
-    <span class="badge fs-6 @(Model.IsReady ? "text-bg-success" : "text-bg-warning")">@Model.ReadinessStatus</span>
+    <div>
+        <span class="badge fs-6 @(Model.IsReady ? "text-bg-success" : "text-bg-warning")">@Model.ReadinessStatus</span>
+        @if (Model.ReadinessReasons.Count > 0)
+        {
+            <ul class="small text-danger mt-2 mb-0">
+                @foreach (var reason in Model.ReadinessReasons)
+                {
+                    <li>@reason</li>
+                }
+            </ul>
+        }
+    </div>
 </header>
 
 @if (TempData["SuccessMessage"] is string success)
@@ -29,31 +40,50 @@
     <div class="card-body">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
             <div>
-                <h2 class="h5 mb-1">Koraci rute</h2>
+                <h2 class="h5 mb-1">Koraci tehnološke rute</h2>
                 <p class="text-secondary mb-0">Redosled, normativi i kompatibilnost aktivnih mašina</p>
             </div>
-            <form asp-action="Estimate" method="post" class="d-flex flex-wrap align-items-end gap-2">
-                <input type="hidden" name="ProductId" value="@Model.ProductId" />
-                <div>
-                    <label class="form-label mb-1" for="estimate-quantity">Količina za procenu</label>
-                    <input class="form-control" id="estimate-quantity" name="Quantity" type="number" min="1" value="@Model.ProbeQuantity" />
-                </div>
-                <button class="btn btn-outline-primary" type="submit">Izračunaj trajanje</button>
-            </form>
         </div>
 
-        @if (Model.EstimationMessage is not null)
-        {
-            <div class="alert @(Model.EstimatedTotalSeconds.HasValue ? "alert-info" : "alert-warning")" role="status">
-                @Model.EstimationMessage
-                @if (Model.EstimatedTotalSeconds is long seconds)
-                {
-                    var totalMinutes = seconds / 60;
-                    var remainderSeconds = seconds % 60;
-                    <strong class="ms-1">@totalMinutes.ToString("N0", culture) min @remainderSeconds.ToString("00") sek</strong>
-                }
+        <section class="border rounded-3 bg-light p-3 mb-4" aria-labelledby="duration-estimate-heading">
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+                <div>
+                    <h3 id="duration-estimate-heading" class="h6 mb-1">Procena trajanja proizvodnje</h3>
+                    <p class="small text-secondary mb-0">
+                        Zbirno procesno vreme, a ne datum završetka. Ne obuhvata smene, pauze,
+                        neradne dane, zauzetost mašina, paralelni rad, transport ni čekanje.
+                    </p>
+                </div>
+                <form asp-action="Estimate" method="post" class="d-flex flex-wrap align-items-end gap-2">
+                    <input type="hidden" name="ProductId" value="@Model.ProductId" />
+                    <div>
+                        <label class="form-label mb-1" for="estimate-quantity">Količina (komada)</label>
+                        <input class="form-control" id="estimate-quantity" name="Quantity" type="number" min="1" value="@Model.ProbeQuantity" />
+                    </div>
+                    <button class="btn btn-outline-primary" type="submit">Izračunaj trajanje</button>
+                </form>
             </div>
-        }
+
+            @if (Model.EstimationMessage is not null)
+            {
+                <div class="alert @(Model.EstimatedTotalSeconds.HasValue ? "alert-info" : "alert-warning") mt-3 mb-0" role="status">
+                    @Model.EstimationMessage
+                    @if (Model.EstimatedTotalSeconds is long seconds)
+                    {
+                        var totalHours = seconds / 3600;
+                        var totalMinutes = seconds / 60 % 60;
+                        var remainderSeconds = seconds % 60;
+                        <strong class="ms-1">
+                            @if (totalHours > 0)
+                            {
+                                @totalHours.ToString("N0", culture)<text> h </text>
+                            }
+                            @totalMinutes min @remainderSeconds.ToString("00") sek
+                        </strong>
+                    }
+                </div>
+            }
+        </section>
 
         @if (Model.Steps.Count == 0)
         {
@@ -121,7 +151,8 @@
                                         <input type="hidden" name="stepId" value="@step.Id" />
                                         <button class="btn btn-sm btn-outline-secondary" type="submit" aria-label="Pomeri korak dole">↓</button>
                                     </form>
-                                    <form asp-action="RemoveStep" method="post" class="d-inline">
+                                    <form asp-action="RemoveStep" method="post" class="d-inline"
+                                          onsubmit="return confirm('Da li sigurno želite da uklonite ovaj korak iz rute?');">
                                         <input type="hidden" name="productId" value="@Model.ProductId" />
                                         <input type="hidden" name="stepId" value="@step.Id" />
                                         <button class="btn btn-sm btn-outline-danger" type="submit">Ukloni</button>
@@ -138,7 +169,7 @@
 
 <section class="card border-0 shadow-sm">
     <div class="card-body">
-        <h2 class="h5">Dodaj korak rute</h2>
+        <h2 class="h5">Dodaj operaciju</h2>
         @if (Model.ActiveOperations.Count == 0)
         {
             <p class="text-secondary mb-0">Nema aktivnih operacija u katalogu. Dodajte ili aktivirajte operaciju pre uređivanja rute.</p>

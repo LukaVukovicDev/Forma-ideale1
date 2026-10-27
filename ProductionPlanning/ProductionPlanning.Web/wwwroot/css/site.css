@@ -27,11 +27,47 @@ body {
 }
 
 .dashboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
   margin-bottom: 3rem;
   padding: 2.5rem 2.75rem;
   border: 1px solid #e5eaf0;
   border-radius: 1rem;
   background: linear-gradient(115deg, #f4f7fb 0%, #ffffff 72%);
+}
+
+.dashboard-header-copy {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.dashboard-header-copy .dashboard-subtitle {
+  max-width: 42rem;
+  line-height: 1.55;
+}
+
+.dashboard-brand {
+  display: flex;
+  flex: 0 1 15rem;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.dashboard-brand-logo {
+  display: block;
+  width: min(100%, 15rem);
+  height: auto;
+  object-fit: contain;
+}
+
+.dashboard-brand-author {
+  color: #5d6c7b;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
 }
 
 .dashboard-title {
@@ -252,8 +288,36 @@ body {
   }
 
   .dashboard-header {
+    align-items: flex-start;
     margin-bottom: 2rem;
     padding: 1.75rem 1.5rem;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .dashboard-header {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .dashboard-brand {
+    align-items: flex-start;
+  }
+
+  .dashboard-brand-logo {
+    width: min(100%, 12rem);
+  }
+}
+
+@media (min-width: 576px) and (max-width: 767.98px) {
+  .dashboard-header {
+    gap: 1rem;
+    padding-right: 1.5rem;
+    padding-left: 1.5rem;
+  }
+
+  .dashboard-brand {
+    flex-basis: 11rem;
   }
 }
 

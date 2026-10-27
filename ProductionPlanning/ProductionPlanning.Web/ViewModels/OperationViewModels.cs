@@ -144,6 +144,8 @@ public class ProductRouteViewModel
 
     public bool IsReady { get; init; }
 
+    public List<string> ReadinessReasons { get; init; } = [];
+
     public List<ProductRouteStepViewModel> Steps { get; init; } = [];
 }
 
@@ -158,6 +160,8 @@ public class ProductRouteEditorViewModel
     public string ReadinessStatus { get; init; } = string.Empty;
 
     public bool IsReady { get; init; }
+
+    public List<string> ReadinessReasons { get; init; } = [];
 
     public List<ProductRouteStepViewModel> Steps { get; init; } = [];
 
@@ -195,6 +199,10 @@ public class ProductRouteStepViewModel
     public long? EstimatedSeconds { get; set; }
 
     public List<SelectListItem> AvailableOperations { get; set; } = [];
+
+    public List<string> ReadinessIssues { get; set; } = [];
+
+    public bool IsReady => ReadinessIssues.Count == 0;
 }
 
 public class RouteReadinessInput

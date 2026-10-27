@@ -48,7 +48,7 @@ public class ProductRouteService(
 
         await AddMachineCompatibilityAsync(steps, cancellationToken);
 
-        var status = calculationService.GetReadinessStatus(steps
+        var readinessInputs = steps
             .Select(step => new RouteReadinessInput
             {
                 SequenceNumber = step.SequenceNumber,
@@ -57,7 +57,14 @@ public class ProductRouteService(
                 ProcessingSecondsPerUnit = step.ProcessingSecondsPerUnit,
                 ActiveCompatibleMachineCount = step.ActiveCompatibleMachineCount
             })
-            .ToArray());
+            .ToArray();
+        var status = calculationService.GetReadinessStatus(readinessInputs);
+        foreach (var (step, index) in steps.Select((step, index) => (step, index)))
+        {
+            step.ReadinessIssues = calculationService.GetStepReadinessIssues(
+                readinessInputs[index],
+                index + 1);
+        }
 
         return new ProductRouteViewModel
         {
@@ -66,6 +73,7 @@ public class ProductRouteService(
             ProductCode = product.SifraProizvoda,
             ReadinessStatus = status,
             IsReady = status == "Spremna za terminiranje",
+            ReadinessReasons = calculationService.GetReadinessIssues(readinessInputs),
             Steps = steps
         };
     }
@@ -135,6 +143,7 @@ public class ProductRouteService(
             ProductCode = route.ProductCode,
             ReadinessStatus = route.ReadinessStatus,
             IsReady = route.IsReady,
+            ReadinessReasons = route.ReadinessReasons,
             Steps = route.Steps,
             ActiveOperations = operations,
             ProbeQuantity = probeQuantity,

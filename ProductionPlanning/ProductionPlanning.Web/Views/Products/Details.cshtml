@@ -23,17 +23,29 @@
         <div class="card-body">
             <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
                 <div>
-                    <h2 id="product-route-heading" class="h4 mb-1">Tehnološka ruta</h2>
+                    <h2 id="product-route-heading" class="h4 mb-1">Tehnološka ruta proizvoda</h2>
                     <p class="text-secondary mb-0">Sekvenca operacija i normativi za proizvod</p>
                 </div>
                 <div class="d-flex align-items-center gap-2">
                     <span class="badge @(Model.Route.IsReady ? "text-bg-success" : "text-bg-warning")">@Model.Route.ReadinessStatus</span>
-                    <a asp-controller="ProductRoutes" asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-sm btn-outline-primary">Uredi rutu</a>
+                    <a asp-controller="ProductRoutes" asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-sm btn-outline-primary">Uredi tehnološku rutu</a>
                 </div>
             </div>
+            @if (Model.Route.ReadinessReasons.Count > 0)
+            {
+                <div class="alert alert-warning py-2" role="status">
+                    <strong>Razlozi zbog kojih ruta nije spremna:</strong>
+                    <ul class="mb-0 mt-1">
+                        @foreach (var reason in Model.Route.ReadinessReasons)
+                        {
+                            <li>@reason</li>
+                        }
+                    </ul>
+                </div>
+            }
             @if (Model.Route.Steps.Count == 0)
             {
-                <p class="text-secondary mb-0">Ruta još nije definisana.</p>
+                <p class="text-secondary mb-0">Za ovaj proizvod još nije definisana tehnološka ruta.</p>
             }
             else
             {
@@ -53,7 +65,22 @@
                             {
                                 <tr>
                                     <td>@step.SequenceNumber</td>
-                                    <td>@step.OperationCode — @step.OperationName</td>
+                                    <td>
+                                        @step.OperationCode — @step.OperationName
+                                        @if (!step.IsReady)
+                                        {
+                                            <ul class="small text-danger mb-0">
+                                                @foreach (var issue in step.ReadinessIssues)
+                                                {
+                                                    <li>@issue</li>
+                                                }
+                                            </ul>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge text-bg-success">Spremna</span>
+                                        }
+                                    </td>
                                     <td>@step.SetupDurationMinutes min</td>
                                     <td>@step.ProcessingSecondsPerUnit sek</td>
                                     <td>

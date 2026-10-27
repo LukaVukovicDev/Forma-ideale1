@@ -188,23 +188,22 @@ public class ProductRoutesController(
         int stepId,
         CancellationToken cancellationToken)
     {
-        var step = await dbContext.ProductOperations
-            .SingleOrDefaultAsync(
-                item => item.Id == stepId && item.ProductId == productId,
-                cancellationToken);
+        var allSteps = await dbContext.ProductOperations
+            .Where(item => item.ProductId == productId)
+            .OrderBy(item => item.SequenceNumber)
+            .ToListAsync(cancellationToken);
+        var step = allSteps.SingleOrDefault(item => item.Id == stepId);
         if (step is null)
         {
             return NotFound();
         }
 
         await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
-        dbContext.ProductOperations.Remove(step);
-        await dbContext.SaveChangesAsync(cancellationToken);
-
-        var remainingSteps = await dbContext.ProductOperations
-            .Where(item => item.ProductId == productId)
-            .OrderBy(item => item.SequenceNumber)
-            .ToListAsync(cancellationToken);
+        var remainingIds = sequenceService.Remove(
+            allSteps.Select(item => item.Id).ToArray(),
+            stepId);
+        var stepsById = allSteps.ToDictionary(item => item.Id);
+        var remainingSteps = remainingIds.Select(id => stepsById[id]).ToList();
         var highestSequence = remainingSteps.Count == 0
             ? 0
             : remainingSteps.Max(item => item.SequenceNumber);
@@ -214,6 +213,9 @@ public class ProductRoutesController(
             TempData["ErrorMessage"] = "Nije moguće ukloniti korak zbog ograničenja redosleda.";
             return RedirectToAction(nameof(Edit), new { id = productId });
         }
+
+        dbContext.ProductOperations.Remove(step);
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         for (var index = 0; index < remainingSteps.Count; index++)
         {
