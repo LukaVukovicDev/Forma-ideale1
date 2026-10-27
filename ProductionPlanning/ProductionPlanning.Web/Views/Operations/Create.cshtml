@@ -1,0 +1,22 @@
+@model ProductionPlanning.Web.ViewModels.CreateOperationViewModel
+
+@{
+    ViewData["Title"] = "Dodavanje operacije";
+}
+
+<h1>Dodavanje tehnološke operacije</h1>
+<hr />
+<div class="row">
+    <div class="col-12 col-lg-7">
+        <form asp-action="Create" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+            <partial name="_OperationFields" model="Model" />
+            <button type="submit" class="btn btn-primary">Sačuvaj operaciju</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Otkaži</a>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -8,6 +8,9 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddSingleton<MachineStatisticsService>();
 builder.Services.AddSingleton<DashboardStatisticsService>();
 builder.Services.AddScoped<ProductStatisticsService>();
+builder.Services.AddSingleton<RouteCalculationService>();
+builder.Services.AddSingleton<RouteSequenceService>();
+builder.Services.AddScoped<ProductRouteService>();
 
 var connectionString = builder.Configuration
     .GetConnectionString("DefaultConnection")

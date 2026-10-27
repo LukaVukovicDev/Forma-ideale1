@@ -11,15 +11,18 @@ public class ProductsController : Controller
 {
     private readonly ApplicationDbContext _dbContext;
     private readonly ProductStatisticsService _statisticsService;
+    private readonly ProductRouteService _routeService;
     private readonly IWebHostEnvironment _environment;
 
     public ProductsController(
         ApplicationDbContext dbContext,
         ProductStatisticsService statisticsService,
+        ProductRouteService routeService,
         IWebHostEnvironment environment)
     {
         _dbContext = dbContext;
         _statisticsService = statisticsService;
+        _routeService = routeService;
         _environment = environment;
     }
 
@@ -51,6 +54,11 @@ public class ProductsController : Controller
         var statistics = await _statisticsService.GetStatisticsAsync(
             product.Id,
             cancellationToken);
+        var route = await _routeService.GetRouteAsync(product.Id, cancellationToken);
+        if (route is null)
+        {
+            return NotFound();
+        }
 
         return View(new ProductDetailsViewModel
         {
@@ -58,7 +66,8 @@ public class ProductsController : Controller
             Name = product.Naziv,
             Code = product.SifraProizvoda,
             ImagePath = GetProductImagePath(product.SifraProizvoda),
-            Statistics = statistics
+            Statistics = statistics,
+            Route = route
         });
     }
 

@@ -1,0 +1,16 @@
+@model ProductionPlanning.Web.Models.OperationDefinition
+
+@{
+    ViewData["Title"] = "Brisanje operacije";
+}
+
+<h1>Brisanje tehnološke operacije</h1>
+<div class="alert alert-warning mt-3">
+    Da li ste sigurni da želite da obrišete operaciju
+    <strong>@Model.Code — @Model.Name</strong>?
+</div>
+<p>Operacija koja se koristi u tehnološkoj ruti ne može biti obrisana.</p>
+<form asp-action="Delete" asp-route-id="@Model.Id" method="post">
+    <button type="submit" class="btn btn-danger">Obriši operaciju</button>
+    <a asp-action="Index" class="btn btn-outline-secondary">Otkaži</a>
+</form>

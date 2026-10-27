@@ -12,4 +12,7 @@ public class Machine
 
     public ICollection<PlannedProduction> PlannedProductions { get; set; } =
         new List<PlannedProduction>();
+
+    public ICollection<MachineOperationCapability> OperationCapabilities { get; set; } =
+        new List<MachineOperationCapability>();
 }

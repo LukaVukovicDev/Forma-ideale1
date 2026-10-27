@@ -11,6 +11,8 @@ public class ProductDetailsViewModel
     public string ImagePath { get; init; } = string.Empty;
 
     public required ProductProductionStatisticsViewModel Statistics { get; init; }
+
+    public required ProductRouteViewModel Route { get; init; }
 }
 
 public class ProductProductionStatisticsViewModel

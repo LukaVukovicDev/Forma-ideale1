@@ -44,6 +44,59 @@ namespace ProductionPlanning.Web.Migrations
                     b.ToTable("Masine", (string)null);
                 });
 
+            modelBuilder.Entity("ProductionPlanning.Web.Models.MachineOperationCapability", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("MachineId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("OperationDefinitionId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OperationDefinitionId");
+
+                    b.HasIndex("MachineId", "OperationDefinitionId")
+                        .IsUnique();
+
+                    b.ToTable("KompatibilnostMasinaIOperacija", (string)null);
+                });
+
+            modelBuilder.Entity("ProductionPlanning.Web.Models.OperationDefinition", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("TehnoloskeOperacije", (string)null);
+                });
+
             modelBuilder.Entity("ProductionPlanning.Web.Models.PlannedProduction", b =>
                 {
                     b.Property<int>("Id")
@@ -100,6 +153,44 @@ namespace ProductionPlanning.Web.Migrations
                     b.ToTable("Proizvodi", (string)null);
                 });
 
+            modelBuilder.Entity("ProductionPlanning.Web.Models.ProductOperation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("OperationDefinitionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ProcessingSecondsPerUnit")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("SequenceNumber")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("SetupDurationMinutes")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OperationDefinitionId");
+
+                    b.HasIndex("ProductId", "SequenceNumber")
+                        .IsUnique();
+
+                    b.ToTable("OperacijeProizvoda", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_OperacijeProizvoda_ProcessingSecondsPerUnit_Positive", "\"ProcessingSecondsPerUnit\" > 0");
+
+                            t.HasCheckConstraint("CK_OperacijeProizvoda_SequenceNumber_Positive", "\"SequenceNumber\" > 0");
+
+                            t.HasCheckConstraint("CK_OperacijeProizvoda_SetupDurationMinutes_NonNegative", "\"SetupDurationMinutes\" >= 0");
+                        });
+                });
+
             modelBuilder.Entity("ProductionPlanning.Web.Models.ProductionRecord", b =>
                 {
                     b.Property<int>("Id")
@@ -127,6 +218,25 @@ namespace ProductionPlanning.Web.Migrations
                         });
                 });
 
+            modelBuilder.Entity("ProductionPlanning.Web.Models.MachineOperationCapability", b =>
+                {
+                    b.HasOne("ProductionPlanning.Web.Models.Machine", "Machine")
+                        .WithMany("OperationCapabilities")
+                        .HasForeignKey("MachineId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ProductionPlanning.Web.Models.OperationDefinition", "OperationDefinition")
+                        .WithMany("MachineCapabilities")
+                        .HasForeignKey("OperationDefinitionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Machine");
+
+                    b.Navigation("OperationDefinition");
+                });
+
             modelBuilder.Entity("ProductionPlanning.Web.Models.PlannedProduction", b =>
                 {
                     b.HasOne("ProductionPlanning.Web.Models.Machine", "Machine")
@@ -146,6 +256,25 @@ namespace ProductionPlanning.Web.Migrations
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("ProductionPlanning.Web.Models.ProductOperation", b =>
+                {
+                    b.HasOne("ProductionPlanning.Web.Models.OperationDefinition", "OperationDefinition")
+                        .WithMany("ProductOperations")
+                        .HasForeignKey("OperationDefinitionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ProductionPlanning.Web.Models.Product", "Product")
+                        .WithMany("ProductOperations")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("OperationDefinition");
+
+                    b.Navigation("Product");
+                });
+
             modelBuilder.Entity("ProductionPlanning.Web.Models.ProductionRecord", b =>
                 {
                     b.HasOne("ProductionPlanning.Web.Models.PlannedProduction", "PlannedProduction")
@@ -159,12 +288,26 @@ namespace ProductionPlanning.Web.Migrations
 
             modelBuilder.Entity("ProductionPlanning.Web.Models.Machine", b =>
                 {
+                    b.Navigation("OperationCapabilities");
+
                     b.Navigation("PlannedProductions");
+                });
+
+            modelBuilder.Entity("ProductionPlanning.Web.Models.OperationDefinition", b =>
+                {
+                    b.Navigation("MachineCapabilities");
+
+                    b.Navigation("ProductOperations");
                 });
 
             modelBuilder.Entity("ProductionPlanning.Web.Models.PlannedProduction", b =>
                 {
                     b.Navigation("ProductionRecords");
+                });
+
+            modelBuilder.Entity("ProductionPlanning.Web.Models.Product", b =>
+                {
+                    b.Navigation("ProductOperations");
                 });
 #pragma warning restore 612, 618
         }

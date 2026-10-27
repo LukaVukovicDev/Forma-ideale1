@@ -6,6 +6,8 @@ public class PlannedProduction
 
     public int ProductId { get; set; }
 
+    // Kept as the concrete machine assigned to the plan; future scheduling must
+    // validate that assignment against the product route's machine capabilities.
     public int MachineId { get; set; }
 
     public DateOnly PlannedDate { get; set; }

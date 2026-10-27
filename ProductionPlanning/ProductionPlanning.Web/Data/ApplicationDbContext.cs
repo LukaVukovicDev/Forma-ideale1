@@ -21,6 +21,15 @@ public class ApplicationDbContext : DbContext
     public DbSet<ProductionRecord> ProductionRecords =>
         Set<ProductionRecord>();
 
+    public DbSet<OperationDefinition> OperationDefinitions =>
+        Set<OperationDefinition>();
+
+    public DbSet<ProductOperation> ProductOperations =>
+        Set<ProductOperation>();
+
+    public DbSet<MachineOperationCapability> MachineOperationCapabilities =>
+        Set<MachineOperationCapability>();
+
     protected override void OnModelCreating(
         ModelBuilder modelBuilder)
     {
@@ -101,6 +110,84 @@ public class ApplicationDbContext : DbContext
             entity.HasOne(record => record.PlannedProduction)
                 .WithMany(plan => plan.ProductionRecords)
                 .HasForeignKey(record => record.PlannedProductionId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<OperationDefinition>(entity =>
+        {
+            entity.ToTable("TehnoloskeOperacije");
+
+            entity.HasKey(operation => operation.Id);
+
+            entity.Property(operation => operation.Code)
+                .HasMaxLength(40)
+                .IsRequired();
+
+            entity.HasIndex(operation => operation.Code)
+                .IsUnique();
+
+            entity.Property(operation => operation.Name)
+                .HasMaxLength(200)
+                .IsRequired();
+
+            entity.Property(operation => operation.Description)
+                .HasMaxLength(1000);
+        });
+
+        modelBuilder.Entity<ProductOperation>(entity =>
+        {
+            entity.ToTable("OperacijeProizvoda", table =>
+            {
+                table.HasCheckConstraint(
+                    "CK_OperacijeProizvoda_SequenceNumber_Positive",
+                    "\"SequenceNumber\" > 0");
+                table.HasCheckConstraint(
+                    "CK_OperacijeProizvoda_SetupDurationMinutes_NonNegative",
+                    "\"SetupDurationMinutes\" >= 0");
+                table.HasCheckConstraint(
+                    "CK_OperacijeProizvoda_ProcessingSecondsPerUnit_Positive",
+                    "\"ProcessingSecondsPerUnit\" > 0");
+            });
+
+            entity.HasKey(step => step.Id);
+
+            entity.HasIndex(step => new { step.ProductId, step.SequenceNumber })
+                .IsUnique();
+            entity.HasIndex(step => step.OperationDefinitionId);
+
+            entity.HasOne(step => step.Product)
+                .WithMany(product => product.ProductOperations)
+                .HasForeignKey(step => step.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(step => step.OperationDefinition)
+                .WithMany(operation => operation.ProductOperations)
+                .HasForeignKey(step => step.OperationDefinitionId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<MachineOperationCapability>(entity =>
+        {
+            entity.ToTable("KompatibilnostMasinaIOperacija");
+
+            entity.HasKey(capability => capability.Id);
+
+            entity.HasIndex(capability => new
+                {
+                    capability.MachineId,
+                    capability.OperationDefinitionId
+                })
+                .IsUnique();
+            entity.HasIndex(capability => capability.OperationDefinitionId);
+
+            entity.HasOne(capability => capability.Machine)
+                .WithMany(machine => machine.OperationCapabilities)
+                .HasForeignKey(capability => capability.MachineId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(capability => capability.OperationDefinition)
+                .WithMany(operation => operation.MachineCapabilities)
+                .HasForeignKey(capability => capability.OperationDefinitionId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
     }

@@ -1,0 +1,170 @@
+@model ProductionPlanning.Web.ViewModels.ProductRouteEditorViewModel
+
+@{
+    ViewData["Title"] = "Tehnološka ruta proizvoda";
+    var culture = System.Globalization.CultureInfo.GetCultureInfo("sr-Latn-RS");
+}
+
+<header class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div>
+        <a asp-controller="Products" asp-action="Details" asp-route-id="@Model.ProductId" class="small text-decoration-none">&larr; Nazad na proizvod</a>
+        <h1 class="mt-2 mb-1">Tehnološka ruta</h1>
+        <p class="text-secondary mb-0">@Model.ProductCode — @Model.ProductName</p>
+    </div>
+    <span class="badge fs-6 @(Model.IsReady ? "text-bg-success" : "text-bg-warning")">@Model.ReadinessStatus</span>
+</header>
+
+@if (TempData["SuccessMessage"] is string success)
+{
+    <div class="alert alert-success" role="status">@success</div>
+}
+@if (TempData["ErrorMessage"] is string error)
+{
+    <div class="alert alert-danger" role="alert">@error</div>
+}
+
+<div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+<section class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <div>
+                <h2 class="h5 mb-1">Koraci rute</h2>
+                <p class="text-secondary mb-0">Redosled, normativi i kompatibilnost aktivnih mašina</p>
+            </div>
+            <form asp-action="Estimate" method="post" class="d-flex flex-wrap align-items-end gap-2">
+                <input type="hidden" name="ProductId" value="@Model.ProductId" />
+                <div>
+                    <label class="form-label mb-1" for="estimate-quantity">Količina za procenu</label>
+                    <input class="form-control" id="estimate-quantity" name="Quantity" type="number" min="1" value="@Model.ProbeQuantity" />
+                </div>
+                <button class="btn btn-outline-primary" type="submit">Izračunaj trajanje</button>
+            </form>
+        </div>
+
+        @if (Model.EstimationMessage is not null)
+        {
+            <div class="alert @(Model.EstimatedTotalSeconds.HasValue ? "alert-info" : "alert-warning")" role="status">
+                @Model.EstimationMessage
+                @if (Model.EstimatedTotalSeconds is long seconds)
+                {
+                    var totalMinutes = seconds / 60;
+                    var remainderSeconds = seconds % 60;
+                    <strong class="ms-1">@totalMinutes.ToString("N0", culture) min @remainderSeconds.ToString("00") sek</strong>
+                }
+            </div>
+        }
+
+        @if (Model.Steps.Count == 0)
+        {
+            <div class="alert alert-light border mb-0">Ruta još nije definisana. Dodajte prvi korak ispod.</div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Redosled</th>
+                            <th>Operacija</th>
+                            <th>Kompatibilne mašine</th>
+                            <th colspan="2">Vremenski normativi</th>
+                            <th>Procena za @Model.ProbeQuantity kom.</th>
+                            <th class="text-end">Redosled / uklanjanje</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var step in Model.Steps)
+                        {
+                            <tr>
+                                <td>@step.SequenceNumber</td>
+                                <td>
+                                    <form asp-action="ChangeOperation" method="post" class="d-flex flex-column gap-1">
+                                        <input type="hidden" name="ProductId" value="@Model.ProductId" />
+                                        <input type="hidden" name="StepId" value="@step.Id" />
+                                        <select class="form-select form-select-sm" name="OperationDefinitionId" asp-items="step.AvailableOperations" aria-label="Operacija u koraku @step.SequenceNumber"></select>
+                                        <button class="btn btn-sm btn-outline-primary mt-1" type="submit">Sačuvaj operaciju</button>
+                                    </form>
+                                    @if (!step.OperationIsActive)
+                                    {
+                                        <span class="badge text-bg-secondary">Neaktivna operacija</span>
+                                    }
+                                </td>
+                                <td>
+                                    @step.CompatibleMachines
+                                    @if (step.ActiveCompatibleMachineCount == 0)
+                                    {
+                                        <span class="badge text-bg-danger">Nema aktivne mašine</span>
+                                    }
+                                </td>
+                                <td colspan="2">
+                                    <form asp-action="UpdateStep" method="post" class="d-flex gap-1 align-items-center">
+                                        <input type="hidden" name="ProductId" value="@Model.ProductId" />
+                                        <input type="hidden" name="StepId" value="@step.Id" />
+                                        <input type="hidden" name="OperationDefinitionId" value="@step.OperationDefinitionId" />
+                                        <label class="visually-hidden" for="setup-@step.Id">Priprema (min)</label>
+                                        <input id="setup-@step.Id" class="form-control form-control-sm" name="SetupDurationMinutes" type="number" min="0" value="@step.SetupDurationMinutes" />
+                                        <label class="visually-hidden" for="processing-@step.Id">Obrada po komadu (sek)</label>
+                                        <input id="processing-@step.Id" class="form-control form-control-sm" name="ProcessingSecondsPerUnit" type="number" min="1" value="@step.ProcessingSecondsPerUnit" />
+                                        <button class="btn btn-sm btn-outline-primary text-nowrap" type="submit">Sačuvaj</button>
+                                    </form>
+                                </td>
+                                <td>@(step.EstimatedSeconds is long stepSeconds ? $"{stepSeconds / 60} min {stepSeconds % 60:00} sek" : "Nije dostupno")</td>
+                                <td class="text-end text-nowrap">
+                                    <form asp-action="MoveUp" method="post" class="d-inline">
+                                        <input type="hidden" name="productId" value="@Model.ProductId" />
+                                        <input type="hidden" name="stepId" value="@step.Id" />
+                                        <button class="btn btn-sm btn-outline-secondary" type="submit" aria-label="Pomeri korak gore">↑</button>
+                                    </form>
+                                    <form asp-action="MoveDown" method="post" class="d-inline">
+                                        <input type="hidden" name="productId" value="@Model.ProductId" />
+                                        <input type="hidden" name="stepId" value="@step.Id" />
+                                        <button class="btn btn-sm btn-outline-secondary" type="submit" aria-label="Pomeri korak dole">↓</button>
+                                    </form>
+                                    <form asp-action="RemoveStep" method="post" class="d-inline">
+                                        <input type="hidden" name="productId" value="@Model.ProductId" />
+                                        <input type="hidden" name="stepId" value="@step.Id" />
+                                        <button class="btn btn-sm btn-outline-danger" type="submit">Ukloni</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</section>
+
+<section class="card border-0 shadow-sm">
+    <div class="card-body">
+        <h2 class="h5">Dodaj korak rute</h2>
+        @if (Model.ActiveOperations.Count == 0)
+        {
+            <p class="text-secondary mb-0">Nema aktivnih operacija u katalogu. Dodajte ili aktivirajte operaciju pre uređivanja rute.</p>
+        }
+        else
+        {
+            <form asp-action="AddStep" method="post" class="row g-3 align-items-end">
+                <input type="hidden" name="ProductId" value="@Model.ProductId" />
+                <div class="col-12 col-lg-5">
+                    <label class="form-label" for="OperationDefinitionId">Operacija</label>
+                    <select class="form-select" id="OperationDefinitionId" name="OperationDefinitionId" asp-items="Model.ActiveOperations">
+                        <option value="">Izaberite operaciju</option>
+                    </select>
+                </div>
+                <div class="col-6 col-lg-2">
+                    <label class="form-label" for="SetupDurationMinutes">Priprema (min)</label>
+                    <input class="form-control" id="SetupDurationMinutes" name="SetupDurationMinutes" type="number" min="0" value="0" />
+                </div>
+                <div class="col-6 col-lg-3">
+                    <label class="form-label" for="ProcessingSecondsPerUnit">Obrada po komadu (sek)</label>
+                    <input class="form-control" id="ProcessingSecondsPerUnit" name="ProcessingSecondsPerUnit" type="number" min="1" value="1" />
+                </div>
+                <div class="col-12 col-lg-2">
+                    <button class="btn btn-primary w-100" type="submit">Dodaj korak</button>
+                </div>
+            </form>
+        }
+    </div>
+</section>

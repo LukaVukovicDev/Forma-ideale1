@@ -1,0 +1,56 @@
+@model IReadOnlyList<ProductionPlanning.Web.ViewModels.OperationIndexItemViewModel>
+
+@{
+    ViewData["Title"] = "Tehnološke operacije";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h1 class="mb-1">Tehnološke operacije</h1>
+        <p class="text-secondary mb-0">Katalog operacija i kompatibilnost sa mašinama</p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary">Dodaj operaciju</a>
+</div>
+
+@if (TempData["SuccessMessage"] is string success)
+{
+    <div class="alert alert-success" role="status">@success</div>
+}
+@if (TempData["ErrorMessage"] is string error)
+{
+    <div class="alert alert-danger" role="alert">@error</div>
+}
+
+<div class="table-responsive">
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>Šifra</th>
+                <th>Naziv</th>
+                <th>Status</th>
+                <th>Kompatibilne mašine</th>
+                <th class="text-end">Akcije</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var operation in Model)
+            {
+                <tr>
+                    <td>@operation.Code</td>
+                    <td>@operation.Name</td>
+                    <td>
+                        <span class="badge @(operation.IsActive ? "text-bg-success" : "text-bg-secondary")">
+                            @(operation.IsActive ? "Aktivna" : "Neaktivna")
+                        </span>
+                    </td>
+                    <td>@operation.CompatibleMachineCount</td>
+                    <td class="text-end">
+                        <a asp-action="Details" asp-route-id="@operation.Id" class="btn btn-sm btn-outline-primary">Mašine</a>
+                        <a asp-action="Edit" asp-route-id="@operation.Id" class="btn btn-sm btn-primary">Izmeni</a>
+                        <a asp-action="Delete" asp-route-id="@operation.Id" class="btn btn-sm btn-outline-danger">Obriši</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
