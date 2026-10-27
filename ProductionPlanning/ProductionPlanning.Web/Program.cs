@@ -11,6 +11,7 @@ builder.Services.AddScoped<ProductStatisticsService>();
 builder.Services.AddSingleton<RouteCalculationService>();
 builder.Services.AddSingleton<RouteSequenceService>();
 builder.Services.AddScoped<ProductRouteService>();
+builder.Services.AddSingleton<DemoOperationCatalogImporter>();
 
 var connectionString = builder.Configuration
     .GetConnectionString("DefaultConnection")
@@ -21,6 +22,23 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(connectionString));
 
 var app = builder.Build();
+
+if (args.Contains("--import-demo-operations", StringComparer.Ordinal))
+{
+    if (!app.Environment.IsDevelopment())
+    {
+        throw new InvalidOperationException(
+            "Katalog demonstracionih operacija može se uvesti samo u Development okruženju.");
+    }
+
+    Directory.SetCurrentDirectory(app.Environment.ContentRootPath);
+    var importer = app.Services.GetRequiredService<DemoOperationCatalogImporter>();
+    await importer.RunAsync(
+        app.Services,
+        app.Environment.ContentRootPath,
+        connectionString);
+    return;
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
