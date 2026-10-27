@@ -1,0 +1,220 @@
+@model ProductionPlanning.Web.ViewModels.ProductDetailsViewModel
+@using System.Text.Json
+
+@{
+    ViewData["Title"] = Model.Name;
+    var statistics = Model.Statistics;
+    var jsonOptions = new JsonSerializerOptions
+    {
+        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.Default
+    };
+}
+
+<section class="product-details">
+    <header class="product-details-header">
+        <div>
+            <a asp-action="Index" class="text-decoration-none small">&larr; Nazad na proizvode</a>
+            <h1 class="product-details-title mt-2">@Model.Name</h1>
+            <p class="text-secondary mb-0">Šifra proizvoda: <strong>@Model.Code</strong></p>
+        </div>
+    </header>
+
+    <div class="row g-4 product-details-main">
+        <div class="col-12 col-lg-4">
+            <section class="product-photo-card" aria-label="Fotografija proizvoda">
+                <img src="@Model.ImagePath"
+                     alt="@(Model.ImagePath.EndsWith(".svg", StringComparison.OrdinalIgnoreCase) ? "Rezervna ilustracija; fotografija proizvoda nije dostupna." : $"Fotografija proizvoda {Model.Name}")"
+                     class="product-photo" />
+                @if (Model.ImagePath.EndsWith(".svg", StringComparison.OrdinalIgnoreCase))
+                {
+                    <span class="product-photo-caption">Fotografija nije dostupna</span>
+                }
+            </section>
+        </div>
+
+        <div class="col-12 col-lg-8">
+            <section aria-labelledby="product-statistics-heading">
+                <div class="product-section-heading">
+                    <div>
+                        <h2 id="product-statistics-heading">Statistika proizvodnje</h2>
+                        <p>Mesečni KPI prema datumu plana</p>
+                    </div>
+                    <span class="badge text-bg-light border">Stvarni podaci iz evidencije</span>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-12 col-sm-6">
+                        <article class="product-kpi-card">
+                            <span class="product-kpi-label">Planirano ovog meseca</span>
+                            <strong>@statistics.PlannedThisMonth.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("sr-Latn-RS"))</strong>
+                            <span class="product-kpi-caption">komada</span>
+                        </article>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <article class="product-kpi-card">
+                            <span class="product-kpi-label">Urađeno za planove ovog meseca</span>
+                            <strong>@statistics.ProducedForThisMonthPlans.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("sr-Latn-RS"))</strong>
+                            <span class="product-kpi-caption">komada</span>
+                        </article>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <article class="product-kpi-card">
+                            <span class="product-kpi-label">Realizacija plana</span>
+                            <strong class="@(statistics.IsOverproduced ? "text-danger" : "")">
+                                @if (statistics.CompletionPercentage is double percentage)
+                                {
+                                    @percentage.ToString("N1", System.Globalization.CultureInfo.GetCultureInfo("sr-Latn-RS"))<text>%</text>
+                                }
+                                else
+                                {
+                                    <span class="product-kpi-no-data">Nema podataka</span>
+                                }
+                            </strong>
+                            <span class="product-kpi-caption">
+                                @if (statistics.IsOverproduced)
+                                {
+                                    <span class="badge text-bg-danger">Prekoračenje plana</span>
+                                }
+                                else
+                                {
+                                    <text>Urađeno / planirano</text>
+                                }
+                            </span>
+                        </article>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <article class="product-kpi-card">
+                            <span class="product-kpi-label">Preostala količina</span>
+                            <strong>@statistics.RemainingQuantity.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("sr-Latn-RS"))</strong>
+                            <span class="product-kpi-caption">komada</span>
+                        </article>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <div id="product-chart-data"
+         data-plan-labels="@JsonSerializer.Serialize(statistics.PlanDailyValues.Select(day => day.Date.ToString("dd.MM.yyyy.")), jsonOptions)"
+         data-planned="@JsonSerializer.Serialize(statistics.PlanDailyValues.Select(day => day.PlannedQuantity), jsonOptions)"
+         data-plan-produced="@JsonSerializer.Serialize(statistics.PlanDailyValues.Select(day => day.ProducedQuantity), jsonOptions)"
+         data-record-labels="@JsonSerializer.Serialize(statistics.RecordedDailyValues.Select(day => day.Date.ToString("dd.MM.yyyy.")), jsonOptions)"
+         data-recorded="@JsonSerializer.Serialize(statistics.RecordedDailyValues.Select(day => day.Quantity), jsonOptions)">
+    </div>
+
+    <section class="row g-4 product-charts" aria-label="Grafikoni proizvodnje proizvoda">
+        <div class="col-12 col-xl-6">
+            <article class="product-chart-card">
+                <h2>Planirana i ostvarena proizvodnja po datumima planova</h2>
+                <p class="product-chart-description">Urađene količine su pripisane datumu plana.</p>
+                <div class="product-chart-container">
+                    <canvas id="product-plan-chart" role="img"
+                            aria-label="Planirana i ostvarena proizvodnja grupisana prema datumima planova u poslednjih 30 dana"></canvas>
+                </div>
+                <details class="product-chart-table">
+                    <summary>Prikaži tabelarne podatke grafikona</summary>
+                    <div class="table-responsive mt-2">
+                        <table class="table table-sm">
+                            <caption>Planirana i ostvarena količina po datumu plana</caption>
+                            <thead><tr><th>Datum plana</th><th>Planirano (kom)</th><th>Urađeno (kom)</th></tr></thead>
+                            <tbody>
+                                @foreach (var day in statistics.PlanDailyValues)
+                                {
+                                    <tr>
+                                        <th scope="row">@day.Date.ToString("dd.MM.yyyy.")</th>
+                                        <td>@day.PlannedQuantity</td>
+                                        <td>@day.ProducedQuantity</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </details>
+            </article>
+        </div>
+
+        <div class="col-12 col-xl-6">
+            <article class="product-chart-card">
+                <h2>Evidentirana proizvodnja po danima</h2>
+                <p class="product-chart-description">Grupisano prema lokalnom datumu evidentiranja (Europe/Belgrade).</p>
+                <div class="product-chart-container">
+                    <canvas id="product-recorded-chart" role="img"
+                            aria-label="Stvarno evidentirana proizvodnja po lokalnim datumima u poslednjih 30 dana"></canvas>
+                </div>
+                <details class="product-chart-table">
+                    <summary>Prikaži tabelarne podatke grafikona</summary>
+                    <div class="table-responsive mt-2">
+                        <table class="table table-sm">
+                            <caption>Stvarno evidentirana proizvodnja po lokalnom datumu</caption>
+                            <thead><tr><th>Datum evidentiranja</th><th>Urađeno (kom)</th></tr></thead>
+                            <tbody>
+                                @foreach (var day in statistics.RecordedDailyValues)
+                                {
+                                    <tr>
+                                        <th scope="row">@day.Date.ToString("dd.MM.yyyy.")</th>
+                                        <td>@day.Quantity</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </details>
+            </article>
+        </div>
+    </section>
+
+    <section class="product-plans-section" aria-labelledby="product-plans-heading">
+        <div class="product-section-heading">
+            <div>
+                <h2 id="product-plans-heading">Poslednji planovi proizvoda</h2>
+                <p>Prikazano je najviše 10 najnovijih planova.</p>
+            </div>
+        </div>
+
+        @if (statistics.RecentPlans.Count == 0)
+        {
+            <div class="alert alert-light border" role="status">
+                Za ovaj proizvod još nema planova proizvodnje.
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-striped align-middle">
+                    <thead>
+                        <tr>
+                            <th>Datum plana</th>
+                            <th>Mašina</th>
+                            <th class="text-end">Planirano</th>
+                            <th class="text-end">Urađeno</th>
+                            <th class="text-end">Realizacija</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var plan in statistics.RecentPlans)
+                        {
+                            <tr>
+                                <td>@plan.PlannedDate.ToString("dd.MM.yyyy.")</td>
+                                <td>@plan.MachineCode — @plan.MachineName</td>
+                                <td class="text-end">@plan.PlannedQuantity</td>
+                                <td class="text-end">@plan.ProducedQuantity</td>
+                                <td class="text-end @(plan.CompletionPercentage > 100 ? "text-danger fw-semibold" : "")">
+                                    @plan.CompletionPercentage.ToString("N1", System.Globalization.CultureInfo.GetCultureInfo("sr-Latn-RS"))%
+                                    @if (plan.CompletionPercentage > 100)
+                                    {
+                                        <span class="badge text-bg-danger">Prekoračenje</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+</section>
+
+@section Scripts {
+    <script src="~/lib/chart.js/chart.umd.min.js" asp-append-version="true"></script>
+    <script src="~/js/product-details.js" asp-append-version="true"></script>
+}

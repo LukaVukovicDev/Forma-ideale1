@@ -27,6 +27,7 @@
             <th>ID</th>
             <th>Šifra proizvoda</th>
             <th>Naziv</th>
+            <th>Akcije</th>
         </tr>
     </thead>
     <tbody>
@@ -36,6 +37,18 @@
                 <td>@product.Id</td>
                 <td>@product.SifraProizvoda</td>
                 <td>@product.Naziv</td>
+                <td>
+                    <a asp-action="Details"
+                       asp-route-id="@product.Id"
+                       class="btn btn-sm btn-outline-primary">
+                        Prikaži
+                    </a>
+                    <a asp-action="Edit"
+                       asp-route-id="@product.Id"
+                       class="btn btn-sm btn-primary">
+                        Izmeni
+                    </a>
+                </td>
             </tr>
         }
     </tbody>
