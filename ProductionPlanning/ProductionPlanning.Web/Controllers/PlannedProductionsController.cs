@@ -21,8 +21,7 @@ public class PlannedProductionsController : Controller
     {
         var plans = await _dbContext.PlannedProductions
             .AsNoTracking()
-            .OrderByDescending(plan => plan.PlannedDate)
-            .ThenBy(plan => plan.Id)
+            .OrderByDescending(plan => plan.Id)
             .Select(plan => new PlannedProductionIndexViewModel
             {
                 Id = plan.Id,

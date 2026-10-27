@@ -24,7 +24,7 @@
 
 <section class="card shadow-sm mb-4" aria-labelledby="schedule-operation-heading">
     <div class="card-body">
-        <h2 id="schedule-operation-heading" class="h5">Zakaži sledeću operaciju</h2>
+        <h2 id="schedule-operation-heading" class="h5 text-center mb-3">Zakaži sledeću operaciju</h2>
         @if (Model.UnscheduledOperations.Count == 0)
         {
             <p class="text-secondary mb-0">
@@ -34,7 +34,7 @@
         }
         else
         {
-            <form asp-action="Schedule" method="post" id="schedule-form" class="row g-3 align-items-end">
+            <form asp-action="Schedule" method="post" id="schedule-form" class="schedule-form row g-3 align-items-end justify-content-center">
                 <input type="hidden" name="plannedProductionId" id="planned-production-id" />
                 <input type="hidden" name="productOperationId" id="product-operation-id" />
                 <input type="hidden" name="date" value="@Model.SelectedDate.ToString("yyyy-MM-dd")" />
@@ -60,7 +60,6 @@
                             </option>
                         }
                     </select>
-                    <div class="form-text" id="operation-duration">Trajanje se računa iz normativa rute i količine naloga.</div>
                 </div>
                 <div class="col-12 col-md-6 col-xl-3">
                     <label class="form-label" for="machine-choice">Kompatibilna mašina</label>
@@ -88,7 +87,10 @@
                     <button class="btn btn-primary w-100" id="schedule-button" type="submit" disabled>Zakaži operaciju</button>
                 </div>
                 <div class="col-12">
-                    <p class="small text-secondary mb-0" id="expected-end">
+                    <div class="form-text" id="operation-duration">Trajanje se računa iz normativa rute i količine naloga.</div>
+                </div>
+                <div class="col-12">
+                    <p class="small text-secondary text-center mb-0" id="expected-end">
                         Vreme završetka izračunava se automatski. Ceo termin mora stati u jedan raspoloživ radni interval.
                     </p>
                 </div>
@@ -154,7 +156,7 @@
                         <tr><th>Nalog / proizvod</th><th>Operacija</th><th>Mašina</th><th>Početak</th><th>Završetak</th><th>Trajanje</th><th></th></tr>
                     </thead>
                     <tbody>
-                        @foreach (var item in Model.ScheduledOperations.OrderBy(item => item.StartAtLocal))
+                        @foreach (var item in Model.ScheduledOperations.OrderByDescending(item => item.Id))
                         {
                             <tr>
                                 <td>#@item.PlannedProductionId — @item.ProductCode / @item.ProductName</td>

@@ -14,7 +14,7 @@ public class OperationsController(ApplicationDbContext dbContext) : Controller
     {
         var operations = await dbContext.OperationDefinitions
             .AsNoTracking()
-            .OrderBy(operation => operation.Name)
+            .OrderByDescending(operation => operation.Id)
             .Select(operation => new OperationIndexItemViewModel
             {
                 Id = operation.Id,

@@ -39,20 +39,17 @@ public sealed class MachineCalendarController(
             WorkingIntervals = await dbContext.MachineWorkingIntervals
                 .AsNoTracking()
                 .Where(item => item.MachineId == machineId)
-                .OrderBy(item => item.DayOfWeek)
-                .ThenBy(item => item.StartTime)
+                .OrderByDescending(item => item.Id)
                 .ToListAsync(cancellationToken),
             Breaks = await dbContext.MachineBreaks
                 .AsNoTracking()
                 .Where(item => item.MachineId == machineId)
-                .OrderBy(item => item.DayOfWeek)
-                .ThenBy(item => item.StartTime)
+                .OrderByDescending(item => item.Id)
                 .ToListAsync(cancellationToken),
             Exceptions = await dbContext.MachineCalendarExceptions
                 .AsNoTracking()
                 .Where(item => item.MachineId == machineId)
-                .OrderBy(item => item.Date)
-                .ThenBy(item => item.StartTime)
+                .OrderByDescending(item => item.Id)
                 .ToListAsync(cancellationToken)
         };
 

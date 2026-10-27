@@ -21,8 +21,7 @@ public class ProductionRecordsController : Controller
     {
         var records = await _dbContext.ProductionRecords
             .AsNoTracking()
-            .OrderByDescending(record => record.RecordedAtUtc)
-            .ThenByDescending(record => record.Id)
+            .OrderByDescending(record => record.Id)
             .Select(record => new ProductionRecordIndexViewModel
             {
                 Id = record.Id,

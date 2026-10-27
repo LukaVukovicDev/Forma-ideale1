@@ -169,7 +169,7 @@ public sealed class ProductionSchedulingController(
             ScheduledOperations = ganttOperations,
             MachineRows = (await dbContext.Machines
                     .AsNoTracking()
-                    .OrderBy(machine => machine.SifraMasine)
+                    .OrderByDescending(machine => machine.Id)
                     .Select(machine => new { machine.Id, machine.SifraMasine, machine.Naziv })
                     .ToListAsync(cancellationToken))
                 .Select(machine => new SchedulingMachineRowViewModel

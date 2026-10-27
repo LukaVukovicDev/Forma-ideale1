@@ -28,7 +28,7 @@ public class MachinesController : Controller
     {
         var machines = await _dbContext.Machines
             .AsNoTracking()
-            .OrderBy(machine => machine.SifraMasine)
+            .OrderByDescending(machine => machine.Id)
             .ToListAsync(cancellationToken);
 
         return View(machines);

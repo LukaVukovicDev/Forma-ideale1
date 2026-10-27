@@ -700,6 +700,16 @@ body {
     vertical-align: -0.05rem;
 }
 
+.schedule-form {
+    max-width: 1180px;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.schedule-form > div {
+    min-width: 0;
+}
+
 .gantt-time-axis {
     display: grid;
     grid-template-columns: repeat(7, minmax(0, 1fr));

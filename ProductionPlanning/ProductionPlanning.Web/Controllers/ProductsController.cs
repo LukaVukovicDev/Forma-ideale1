@@ -31,7 +31,7 @@ public class ProductsController : Controller
     {
         var products = await _dbContext.Products
             .AsNoTracking()
-            .OrderBy(p => p.SifraProizvoda)
+            .OrderByDescending(product => product.Id)
             .ToListAsync(cancellationToken);
 
         return View(products);
