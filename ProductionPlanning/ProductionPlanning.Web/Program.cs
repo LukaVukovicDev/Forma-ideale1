@@ -6,6 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddSingleton<MachineStatisticsService>();
+builder.Services.AddSingleton<DashboardStatisticsService>();
 
 var connectionString = builder.Configuration
     .GetConnectionString("DefaultConnection")

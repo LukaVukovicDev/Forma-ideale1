@@ -1,4 +1,6 @@
-﻿@{
+﻿@model ProductionPlanning.Web.ViewModels.HomeDashboardViewModel
+
+@{
     ViewData["Title"] = "Production Planning";
 }
 
@@ -7,6 +9,86 @@
         <h1 class="dashboard-title">Planiranje proizvodnje</h1>
         <p class="dashboard-subtitle">Sistem za operativnu pripremu i terminiranje proizvodnje</p>
     </header>
+
+    <section class="dashboard-overview" aria-labelledby="overview-heading">
+        <div class="dashboard-overview-header">
+            <div>
+                <h2 id="overview-heading">Pregled proizvodnje</h2>
+                <p class="dashboard-clock">
+                    <time id="dashboard-clock" aria-live="off">Učitavanje datuma i vremena...</time>
+                </p>
+            </div>
+            <span class="dashboard-demo-badge">DEMO PODACI</span>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-12 col-sm-6 col-xl-3">
+                <article class="dashboard-kpi-card">
+                    <span class="dashboard-kpi-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M4 19V5m0 14h16M7 15l4-4 3 2 6-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </span>
+                    <span class="dashboard-kpi-label">Uspešnost plana</span>
+                    <strong class="dashboard-kpi-value">
+                        @if (Model.Statistics.PlanSuccessPercentage is double successPercentage)
+                        {
+                            @successPercentage.ToString("N1", System.Globalization.CultureInfo.GetCultureInfo("sr-Latn-RS"))<text>%</text>
+                        }
+                        else
+                        {
+                            <span class="dashboard-kpi-no-data">Nema podataka</span>
+                        }
+                    </strong>
+                    <span class="dashboard-kpi-caption">Realizacija ovog meseca</span>
+                </article>
+            </div>
+
+            <div class="col-12 col-sm-6 col-xl-3">
+                <article class="dashboard-kpi-card">
+                    <span class="dashboard-kpi-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M4 18h16M6 18V9h12v9M9 9V5h6v4m-5 4h4m-4 3h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </span>
+                    <span class="dashboard-kpi-label">Proizvedeno danas</span>
+                    <strong class="dashboard-kpi-value">@Model.Statistics.ProducedToday.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("sr-Latn-RS"))</strong>
+                    <span class="dashboard-kpi-caption">komada</span>
+                </article>
+            </div>
+
+            <div class="col-12 col-sm-6 col-xl-3">
+                <article class="dashboard-kpi-card">
+                    <span class="dashboard-kpi-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="4" y="6" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.8" />
+                            <path d="M8 3v6m8-6v6M4 11h16m-12 4h2m3 0h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                        </svg>
+                    </span>
+                    <span class="dashboard-kpi-label">Ove nedelje</span>
+                    <strong class="dashboard-kpi-value">@Model.Statistics.ProducedThisWeek.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("sr-Latn-RS"))</strong>
+                    <span class="dashboard-kpi-caption">komada od ponedeljka</span>
+                </article>
+            </div>
+
+            <div class="col-12 col-sm-6 col-xl-3">
+                <article class="dashboard-kpi-card">
+                    <span class="dashboard-kpi-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M4 19V5m0 14h16M7 16h3v-4h4V8h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </span>
+                    <span class="dashboard-kpi-label">Ovog meseca</span>
+                    <strong class="dashboard-kpi-value">@Model.Statistics.ProducedThisMonth.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("sr-Latn-RS"))</strong>
+                    <span class="dashboard-kpi-caption">komada od prvog u mesecu</span>
+                </article>
+            </div>
+        </div>
+
+        <p class="dashboard-demo-notice">
+            <strong>DEMO PODACI</strong> — statistika ne predstavlja stvarnu proizvodnju.
+        </p>
+    </section>
 
     <section class="dashboard-modules" aria-labelledby="modules-heading">
         <div class="dashboard-section-header">
@@ -97,3 +179,7 @@
         </div>
     </section>
 </div>
+
+@section Scripts {
+    <script src="~/js/dashboard-clock.js" asp-append-version="true"></script>
+}

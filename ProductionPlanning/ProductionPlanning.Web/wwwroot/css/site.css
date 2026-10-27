@@ -59,6 +59,110 @@ body {
   font-weight: 650;
 }
 
+.dashboard-overview {
+  margin-bottom: 3rem;
+}
+
+.dashboard-overview-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.dashboard-overview-header h2 {
+  margin: 0;
+  color: #23384d;
+  font-size: 1.35rem;
+  font-weight: 650;
+}
+
+.dashboard-clock {
+  margin: 0.4rem 0 0;
+  color: #627181;
+  font-variant-numeric: tabular-nums;
+}
+
+.dashboard-demo-badge {
+  padding: 0.4rem 0.65rem;
+  border: 1px solid #cfe0ee;
+  border-radius: 999px;
+  background-color: #f2f7fb;
+  color: #24577e;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.dashboard-kpi-card {
+  display: flex;
+  height: 100%;
+  min-height: 190px;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 1.25rem;
+  border: 1px solid #e0e7ef;
+  border-radius: 0.9rem;
+  background: linear-gradient(145deg, #fff 0%, #f8fafc 100%);
+  box-shadow: 0 0.25rem 0.75rem rgb(23 50 77 / 5%);
+}
+
+.dashboard-kpi-icon {
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  place-items: center;
+  margin-bottom: 1rem;
+  border-radius: 0.75rem;
+  background-color: #eaf2f9;
+  color: #24577e;
+}
+
+.dashboard-kpi-icon svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.dashboard-kpi-label {
+  color: #627181;
+  font-size: 0.9rem;
+}
+
+.dashboard-kpi-value {
+  margin-top: 0.2rem;
+  color: #17324d;
+  font-size: clamp(1.65rem, 3vw, 2.1rem);
+  font-weight: 700;
+  line-height: 1.25;
+  font-variant-numeric: tabular-nums;
+}
+
+.dashboard-kpi-no-data {
+  font-size: 1.35rem;
+}
+
+.dashboard-kpi-caption {
+  margin-top: 0.35rem;
+  color: #758392;
+  font-size: 0.82rem;
+}
+
+.dashboard-demo-notice {
+  margin: 1rem 0 0;
+  padding: 0.75rem 1rem;
+  border-left: 4px solid #3478a8;
+  border-radius: 0.4rem;
+  background-color: #f2f7fb;
+  color: #526272;
+  font-size: 0.9rem;
+}
+
+.dashboard-demo-notice strong {
+  color: #24577e;
+  letter-spacing: 0.03em;
+}
+
 .module-card {
   position: relative;
   display: flex;
