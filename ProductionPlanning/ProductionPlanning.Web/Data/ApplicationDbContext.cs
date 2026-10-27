@@ -30,6 +30,14 @@ public class ApplicationDbContext : DbContext
     public DbSet<MachineOperationCapability> MachineOperationCapabilities =>
         Set<MachineOperationCapability>();
 
+    public DbSet<MachineWorkingInterval> MachineWorkingIntervals =>
+        Set<MachineWorkingInterval>();
+
+    public DbSet<MachineBreak> MachineBreaks => Set<MachineBreak>();
+
+    public DbSet<MachineCalendarException> MachineCalendarExceptions =>
+        Set<MachineCalendarException>();
+
     protected override void OnModelCreating(
         ModelBuilder modelBuilder)
     {
@@ -188,6 +196,122 @@ public class ApplicationDbContext : DbContext
             entity.HasOne(capability => capability.OperationDefinition)
                 .WithMany(operation => operation.MachineCapabilities)
                 .HasForeignKey(capability => capability.OperationDefinitionId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<MachineWorkingInterval>(entity =>
+        {
+            entity.ToTable("MachineWorkingIntervals", table =>
+            {
+                table.HasCheckConstraint(
+                    "CK_MachineWorkingIntervals_DayOfWeek",
+                    "\"DayOfWeek\" >= 0 AND \"DayOfWeek\" <= 6");
+                table.HasCheckConstraint(
+                    "CK_MachineWorkingIntervals_TimeRange",
+                    "\"StartTime\" < \"EndTime\"");
+            });
+
+            entity.HasKey(interval => interval.Id);
+
+            entity.HasIndex(interval => new
+            {
+                interval.MachineId,
+                interval.DayOfWeek,
+                interval.StartTime
+            });
+
+            entity.HasIndex(interval => new
+            {
+                interval.MachineId,
+                interval.DayOfWeek,
+                interval.StartTime,
+                interval.EndTime
+            }).IsUnique();
+
+            entity.HasOne(interval => interval.Machine)
+                .WithMany(machine => machine.WorkingIntervals)
+                .HasForeignKey(interval => interval.MachineId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<MachineBreak>(entity =>
+        {
+            entity.ToTable("MachineBreaks", table =>
+            {
+                table.HasCheckConstraint(
+                    "CK_MachineBreaks_DayOfWeek",
+                    "\"DayOfWeek\" >= 0 AND \"DayOfWeek\" <= 6");
+                table.HasCheckConstraint(
+                    "CK_MachineBreaks_TimeRange",
+                    "\"StartTime\" < \"EndTime\"");
+            });
+
+            entity.HasKey(machineBreak => machineBreak.Id);
+
+            entity.Property(machineBreak => machineBreak.Description)
+                .HasMaxLength(200);
+
+            entity.HasIndex(machineBreak => new
+            {
+                machineBreak.MachineId,
+                machineBreak.DayOfWeek,
+                machineBreak.StartTime
+            });
+
+            entity.HasIndex(machineBreak => new
+            {
+                machineBreak.MachineId,
+                machineBreak.DayOfWeek,
+                machineBreak.StartTime,
+                machineBreak.EndTime
+            }).IsUnique();
+
+            entity.HasOne(machineBreak => machineBreak.Machine)
+                .WithMany(machine => machine.Breaks)
+                .HasForeignKey(machineBreak => machineBreak.MachineId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<MachineCalendarException>(entity =>
+        {
+            entity.ToTable("MachineCalendarExceptions", table =>
+            {
+                table.HasCheckConstraint(
+                    "CK_MachineCalendarExceptions_TimeRange",
+                    "\"StartTime\" < \"EndTime\"");
+                table.HasCheckConstraint(
+                    "CK_MachineCalendarExceptions_ExceptionType",
+                    "\"ExceptionType\" IN (1, 2)");
+            });
+
+            entity.HasKey(calendarException => calendarException.Id);
+
+            entity.Property(calendarException => calendarException.ExceptionType)
+                .HasConversion<int>();
+
+            entity.Property(calendarException => calendarException.Reason)
+                .HasMaxLength(500);
+
+            entity.HasIndex(calendarException => new
+            {
+                calendarException.MachineId,
+                calendarException.Date,
+                calendarException.ExceptionType,
+                calendarException.StartTime
+            });
+
+            entity.HasIndex(calendarException => new
+            {
+                calendarException.MachineId,
+                calendarException.Date,
+                calendarException.ExceptionType,
+                calendarException.StartTime,
+                calendarException.EndTime
+            }).IsUnique();
+
+            entity.HasOne(calendarException => calendarException.Machine)
+                .WithMany(machine => machine.CalendarExceptions)
+                .HasForeignKey(calendarException => calendarException.MachineId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
     }

@@ -1,0 +1,329 @@
+@model ProductionPlanning.Web.ViewModels.MachineCalendarViewModel
+
+@{
+    ViewData["Title"] = $"Radni kalendar — {Model.MachineName}";
+    var days = new[]
+    {
+        DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday,
+        DayOfWeek.Thursday, DayOfWeek.Friday, DayOfWeek.Saturday,
+        DayOfWeek.Sunday
+    };
+}
+
+<section class="calendar-page">
+    <header class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-4">
+        <div>
+            <a asp-controller="Machines" asp-action="Details" asp-route-id="@Model.MachineId"
+               class="text-decoration-none small">&larr; Nazad na mašinu</a>
+            <h1 class="h2 mt-2 mb-1">Radni kalendar mašine</h1>
+            <p class="text-secondary mb-0">@Model.MachineName <span class="mx-1">·</span> Šifra: @Model.MachineCode</p>
+        </div>
+        <form asp-action="Index" method="get" class="d-flex align-items-end gap-2">
+            <input type="hidden" name="machineId" value="@Model.MachineId" />
+            <div>
+                <label for="calendar-date" class="form-label">Datum raspoloživosti</label>
+                <input id="calendar-date" name="date" type="date" value="@Model.SelectedDate.ToString("yyyy-MM-dd")"
+                       class="form-control" />
+            </div>
+            <button type="submit" class="btn btn-primary">Prikaži</button>
+        </form>
+    </header>
+
+    @if (TempData["ErrorMessage"] is string error)
+    {
+        <div class="alert alert-danger" role="alert">@error</div>
+    }
+
+    <section class="card shadow-sm mb-4" aria-labelledby="daily-availability-title">
+        <div class="card-body">
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
+                <div>
+                    <h2 id="daily-availability-title" class="h5 mb-1">
+                        Raspoloživost za @Model.SelectedDate.ToString("dd.MM.yyyy.")
+                    </h2>
+                    <p class="small text-secondary mb-0">Lokalno vreme: @Model.TimeZoneId. Raspoloživost ne uključuje zauzeće planiranom proizvodnjom.</p>
+                </div>
+                @if (Model.AvailabilityError is null)
+                {
+                    <strong class="fs-5">@TimeSpan.FromMinutes(Model.AvailableMinutes).ToString(@"h\:mm") raspoloživo</strong>
+                }
+            </div>
+
+            @if (Model.AvailabilityError is not null)
+            {
+                <div class="alert alert-warning mt-3 mb-0" role="alert">@Model.AvailabilityError</div>
+            }
+            else
+            {
+                <div class="calendar-timeline mt-4" role="img" aria-label="Vremenska linija raspoloživosti od 00 do 24 časa">
+                    @foreach (var segment in Model.Timeline)
+                    {
+                        var width = segment.WallClockMinutes / 14.4;
+                        <div class="calendar-timeline-segment calendar-segment-@segment.Kind.ToString().ToLowerInvariant()"
+                             style="width:@width.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)%"
+                             title="@($"{segment.Label}: {TimeLabel(segment.StartMinute)}–{TimeLabel(segment.EndMinute)}")">
+                        </div>
+                    }
+                </div>
+                <div class="calendar-time-axis" aria-hidden="true"><span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>24:00</span></div>
+                <div class="d-flex flex-wrap gap-3 small mt-3">
+                    <span><i class="calendar-legend calendar-segment-regular"></i> Redovno radno vreme</span>
+                    <span><i class="calendar-legend calendar-segment-extra"></i> Dodatno vreme</span>
+                    <span><i class="calendar-legend calendar-segment-break"></i> Pauza</span>
+                    <span><i class="calendar-legend calendar-segment-unavailable"></i> Nedostupno</span>
+                    <span><i class="calendar-legend calendar-segment-offhours"></i> Van radnog vremena</span>
+                </div>
+                @if (Model.EffectiveIntervals.Count > 0)
+                {
+                    <p class="small mt-3 mb-0">
+                        Efektivni intervali:
+                        @string.Join(", ", Model.EffectiveIntervals.Select(interval => $"{interval.StartTime:HH:mm}–{interval.EndTime:HH:mm}"))
+                    </p>
+                }
+            }
+        </div>
+    </section>
+
+    <div class="row g-4">
+        <div class="col-12 col-xl-6">
+            <section class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h2 class="h5">Nedeljno radno vreme</h2>
+                    <form asp-action="AddWorkingInterval" method="post" class="row g-2 align-items-end mb-3">
+                        <input type="hidden" name="MachineId" value="@Model.MachineId" />
+                        <input type="hidden" name="SelectedDate" value="@Model.SelectedDate.ToString("yyyy-MM-dd")" />
+                        <div class="col-12 col-sm-4">
+                            <label class="form-label" for="working-day">Dan</label>
+                            <select class="form-select" id="working-day" name="WorkingDay">
+                                @foreach (var day in days)
+                                {
+                                    <option value="@((int)day)" selected="@(Model.WorkingDay == day)">@DayName(day)</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-6 col-sm-3">
+                            <label class="form-label" for="working-start">Od</label>
+                            <input class="form-control" id="working-start" type="time" name="WorkingStart" value="@Model.WorkingStart.ToString("HH:mm")" required />
+                        </div>
+                        <div class="col-6 col-sm-3">
+                            <label class="form-label" for="working-end">Do</label>
+                            <input class="form-control" id="working-end" type="time" name="WorkingEnd" value="@Model.WorkingEnd.ToString("HH:mm")" required />
+                        </div>
+                        <div class="col-12 col-sm-2"><button class="btn btn-primary w-100" type="submit">Dodaj</button></div>
+                    </form>
+                    @if (Model.WorkingIntervals.Count == 0)
+                    {
+                        <p class="text-secondary mb-0">Nedeljno radno vreme još nije definisano.</p>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle mb-0">
+                                <thead><tr><th>Uređivanje rasporeda</th></tr></thead>
+                                <tbody>
+                                    @foreach (var item in Model.WorkingIntervals)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex flex-wrap align-items-center gap-2">
+                                                    <form asp-action="EditWorkingInterval" method="post" class="d-flex flex-wrap align-items-center gap-2">
+                                                        <input type="hidden" name="machineId" value="@Model.MachineId" />
+                                                        <input type="hidden" name="id" value="@item.Id" />
+                                                        <input type="hidden" name="date" value="@Model.SelectedDate.ToString("yyyy-MM-dd")" />
+                                                    <select class="form-select form-select-sm" name="day">
+                                                        @foreach (var day in days)
+                                                        {
+                                                            <option value="@((int)day)" selected="@(item.DayOfWeek == day)">@DayName(day)</option>
+                                                        }
+                                                    </select>
+                                                    <input class="form-control form-control-sm" type="time" name="start" value="@item.StartTime.ToString("HH:mm")" />
+                                                    <input class="form-control form-control-sm" type="time" name="end" value="@item.EndTime.ToString("HH:mm")" />
+                                                    <button class="btn btn-sm btn-outline-primary" type="submit">Sačuvaj</button>
+                                                    </form>
+                                                    <form asp-action="DeleteWorkingInterval" method="post">
+                                                        <input type="hidden" name="machineId" value="@Model.MachineId" />
+                                                        <input type="hidden" name="id" value="@item.Id" />
+                                                        <input type="hidden" name="date" value="@Model.SelectedDate.ToString("yyyy-MM-dd")" />
+                                                        <button class="btn btn-sm btn-outline-danger" type="submit">Ukloni</button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </section>
+        </div>
+
+        <div class="col-12 col-xl-6">
+            <section class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h2 class="h5">Pauze</h2>
+                    <form asp-action="AddBreak" method="post" class="row g-2 align-items-end mb-3">
+                        <input type="hidden" name="MachineId" value="@Model.MachineId" />
+                        <input type="hidden" name="SelectedDate" value="@Model.SelectedDate.ToString("yyyy-MM-dd")" />
+                        <div class="col-12 col-sm-4">
+                            <label class="form-label" for="break-day">Dan</label>
+                            <select class="form-select" id="break-day" name="BreakDay">
+                                @foreach (var day in days)
+                                {
+                                    <option value="@((int)day)" selected="@(Model.BreakDay == day)">@DayName(day)</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-6 col-sm-3">
+                            <label class="form-label" for="break-start">Od</label>
+                            <input class="form-control" id="break-start" type="time" name="BreakStart" value="@Model.BreakStart.ToString("HH:mm")" required />
+                        </div>
+                        <div class="col-6 col-sm-3">
+                            <label class="form-label" for="break-end">Do</label>
+                            <input class="form-control" id="break-end" type="time" name="BreakEnd" value="@Model.BreakEnd.ToString("HH:mm")" required />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="break-description">Opis (opciono)</label>
+                            <input class="form-control" id="break-description" name="BreakDescription" maxlength="200" />
+                        </div>
+                        <div class="col-12"><button class="btn btn-primary" type="submit">Dodaj pauzu</button></div>
+                    </form>
+                    @if (Model.Breaks.Count == 0)
+                    {
+                        <p class="text-secondary mb-0">Pauze nisu definisane.</p>
+                    }
+                    else
+                    {
+                        @foreach (var item in Model.Breaks)
+                        {
+                            <div class="border-top py-2">
+                                <form asp-action="EditBreak" method="post" class="d-flex flex-wrap align-items-end gap-2">
+                                    <input type="hidden" name="machineId" value="@Model.MachineId" />
+                                    <input type="hidden" name="id" value="@item.Id" />
+                                    <input type="hidden" name="date" value="@Model.SelectedDate.ToString("yyyy-MM-dd")" />
+                                    <label class="small">Dan
+                                        <select class="form-select form-select-sm" name="day">
+                                            @foreach (var day in days)
+                                            {
+                                                <option value="@((int)day)" selected="@(item.DayOfWeek == day)">@DayName(day)</option>
+                                            }
+                                        </select>
+                                    </label>
+                                    <label class="small">Od <input class="form-control form-control-sm" type="time" name="start" value="@item.StartTime.ToString("HH:mm")" /></label>
+                                    <label class="small">Do <input class="form-control form-control-sm" type="time" name="end" value="@item.EndTime.ToString("HH:mm")" /></label>
+                                    <label class="small flex-grow-1">Opis <input class="form-control form-control-sm" name="description" value="@item.Description" maxlength="200" /></label>
+                                    <button class="btn btn-sm btn-outline-primary" type="submit">Sačuvaj</button>
+                                </form>
+                                <form asp-action="DeleteBreak" method="post" class="mt-1">
+                                    <input type="hidden" name="machineId" value="@Model.MachineId" />
+                                    <input type="hidden" name="id" value="@item.Id" />
+                                    <input type="hidden" name="date" value="@Model.SelectedDate.ToString("yyyy-MM-dd")" />
+                                    <button class="btn btn-sm btn-outline-danger" type="submit">Ukloni</button>
+                                </form>
+                            </div>
+                        }
+                    }
+                </div>
+            </section>
+        </div>
+
+        <div class="col-12">
+            <section class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="h5">Izuzeci za određeni datum</h2>
+                    <p class="small text-secondary">Nedostupnost ima prednost nad dodatnim radnim vremenom. Izuzeci ne menjaju nedeljni raspored.</p>
+                    <form asp-action="AddException" method="post" class="row g-2 align-items-end mb-3">
+                        <input type="hidden" name="MachineId" value="@Model.MachineId" />
+                        <input type="hidden" name="SelectedDate" value="@Model.SelectedDate.ToString("yyyy-MM-dd")" />
+                        <div class="col-12 col-sm-3">
+                            <label class="form-label" for="exception-date">Datum</label>
+                            <input class="form-control" id="exception-date" type="date" name="ExceptionDate" value="@Model.SelectedDate.ToString("yyyy-MM-dd")" required />
+                        </div>
+                        <div class="col-12 col-sm-3">
+                            <label class="form-label" for="exception-type">Tip</label>
+                            <select class="form-select" id="exception-type" name="ExceptionType">
+                                <option value="@((int)MachineCalendarExceptionType.Unavailable)">Nedostupno</option>
+                                <option value="@((int)MachineCalendarExceptionType.ExtraWorkingTime)">Dodatno radno vreme</option>
+                            </select>
+                        </div>
+                        <div class="col-6 col-sm-2">
+                            <label class="form-label" for="exception-start">Od</label>
+                            <input class="form-control" id="exception-start" type="time" name="ExceptionStart" value="@Model.ExceptionStart.ToString("HH:mm")" required />
+                        </div>
+                        <div class="col-6 col-sm-2">
+                            <label class="form-label" for="exception-end">Do</label>
+                            <input class="form-control" id="exception-end" type="time" name="ExceptionEnd" value="@Model.ExceptionEnd.ToString("HH:mm")" required />
+                        </div>
+                        <div class="col-12 col-sm-2">
+                            <label class="form-label" for="exception-reason">Razlog</label>
+                            <input class="form-control" id="exception-reason" name="ExceptionReason" maxlength="500" />
+                        </div>
+                        <div class="col-12"><button class="btn btn-primary" type="submit">Dodaj izuzetak</button></div>
+                    </form>
+                    @if (Model.Exceptions.Count == 0)
+                    {
+                        <p class="text-secondary mb-0">Nema evidentiranih izuzetaka.</p>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle mb-0">
+                                <thead><tr><th>Uređivanje izuzetaka</th></tr></thead>
+                                <tbody>
+                                    @foreach (var item in Model.Exceptions)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex flex-wrap align-items-center gap-2">
+                                                    <form asp-action="EditException" method="post" class="d-flex flex-wrap align-items-center gap-2">
+                                                        <input type="hidden" name="machineId" value="@Model.MachineId" />
+                                                        <input type="hidden" name="id" value="@item.Id" />
+                                                        <input type="hidden" name="date" value="@Model.SelectedDate.ToString("yyyy-MM-dd")" />
+                                                    <input class="form-control form-control-sm mb-1" type="date" name="exceptionDate" value="@item.Date.ToString("yyyy-MM-dd")" />
+                                                    <select class="form-select form-select-sm" name="type">
+                                                        <option value="@((int)MachineCalendarExceptionType.Unavailable)" selected="@(item.ExceptionType == MachineCalendarExceptionType.Unavailable)">Nedostupno</option>
+                                                        <option value="@((int)MachineCalendarExceptionType.ExtraWorkingTime)" selected="@(item.ExceptionType == MachineCalendarExceptionType.ExtraWorkingTime)">Dodatno radno vreme</option>
+                                                    </select>
+                                                    <input class="form-control form-control-sm" type="time" name="start" value="@item.StartTime.ToString("HH:mm")" />
+                                                    <input class="form-control form-control-sm" type="time" name="end" value="@item.EndTime.ToString("HH:mm")" />
+                                                    <input class="form-control form-control-sm" name="reason" value="@item.Reason" maxlength="500" />
+                                                    <button class="btn btn-sm btn-outline-primary" type="submit">Sačuvaj</button>
+                                                    </form>
+                                                    <form asp-action="DeleteException" method="post">
+                                                        <input type="hidden" name="machineId" value="@Model.MachineId" />
+                                                        <input type="hidden" name="id" value="@item.Id" />
+                                                        <input type="hidden" name="date" value="@Model.SelectedDate.ToString("yyyy-MM-dd")" />
+                                                        <button class="btn btn-sm btn-outline-danger" type="submit">Ukloni</button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </section>
+        </div>
+    </div>
+</section>
+
+@functions {
+    private static string DayName(DayOfWeek day) => day switch
+    {
+        DayOfWeek.Monday => "Ponedeljak",
+        DayOfWeek.Tuesday => "Utorak",
+        DayOfWeek.Wednesday => "Sreda",
+        DayOfWeek.Thursday => "Četvrtak",
+        DayOfWeek.Friday => "Petak",
+        DayOfWeek.Saturday => "Subota",
+        DayOfWeek.Sunday => "Nedelja",
+        _ => day.ToString()
+    };
+
+    private static string TimeLabel(int minute) =>
+        minute == 1440
+            ? "24:00"
+            : TimeOnly.FromTimeSpan(TimeSpan.FromMinutes(minute)).ToString("HH:mm");
+}

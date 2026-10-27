@@ -15,4 +15,13 @@ public class Machine
 
     public ICollection<MachineOperationCapability> OperationCapabilities { get; set; } =
         new List<MachineOperationCapability>();
+
+    public ICollection<MachineWorkingInterval> WorkingIntervals { get; set; } =
+        new List<MachineWorkingInterval>();
+
+    public ICollection<MachineBreak> Breaks { get; set; } =
+        new List<MachineBreak>();
+
+    public ICollection<MachineCalendarException> CalendarExceptions { get; set; } =
+        new List<MachineCalendarException>();
 }

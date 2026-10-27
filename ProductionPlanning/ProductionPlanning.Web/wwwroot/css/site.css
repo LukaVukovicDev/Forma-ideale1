@@ -663,3 +663,39 @@ body {
     height: 260px;
   }
 }
+.calendar-timeline {
+    display: flex;
+    height: 28px;
+    overflow: hidden;
+    border: 1px solid #d5dbe1;
+    border-radius: 6px;
+    background: #edf0f3;
+}
+
+.calendar-timeline-segment {
+    height: 100%;
+    border-right: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+.calendar-segment-offhours { background-color: #e5e9ed; }
+.calendar-segment-regular { background-color: #3a9b69; }
+.calendar-segment-extra { background-color: #438ac5; }
+.calendar-segment-break { background-color: #e4ad43; }
+.calendar-segment-unavailable { background-color: #d65b5b; }
+
+.calendar-time-axis {
+    display: flex;
+    justify-content: space-between;
+    color: #6c757d;
+    font-size: 0.75rem;
+    margin-top: 0.35rem;
+}
+
+.calendar-legend {
+    display: inline-block;
+    width: 0.75rem;
+    height: 0.75rem;
+    margin-right: 0.25rem;
+    border-radius: 2px;
+    vertical-align: -0.05rem;
+}

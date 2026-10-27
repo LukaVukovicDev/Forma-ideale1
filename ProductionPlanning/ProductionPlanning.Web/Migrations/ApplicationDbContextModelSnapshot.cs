@@ -44,6 +44,83 @@ namespace ProductionPlanning.Web.Migrations
                     b.ToTable("Masine", (string)null);
                 });
 
+            modelBuilder.Entity("ProductionPlanning.Web.Models.MachineBreak", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("DayOfWeek")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<TimeOnly>("EndTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("MachineId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<TimeOnly>("StartTime")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MachineId", "DayOfWeek", "StartTime");
+
+                    b.HasIndex("MachineId", "DayOfWeek", "StartTime", "EndTime")
+                        .IsUnique();
+
+                    b.ToTable("MachineBreaks", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_MachineBreaks_DayOfWeek", "\"DayOfWeek\" >= 0 AND \"DayOfWeek\" <= 6");
+
+                            t.HasCheckConstraint("CK_MachineBreaks_TimeRange", "\"StartTime\" < \"EndTime\"");
+                        });
+                });
+
+            modelBuilder.Entity("ProductionPlanning.Web.Models.MachineCalendarException", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("TEXT");
+
+                    b.Property<TimeOnly>("EndTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ExceptionType")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("MachineId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<TimeOnly>("StartTime")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MachineId", "Date", "ExceptionType", "StartTime");
+
+                    b.HasIndex("MachineId", "Date", "ExceptionType", "StartTime", "EndTime")
+                        .IsUnique();
+
+                    b.ToTable("MachineCalendarExceptions", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_MachineCalendarExceptions_ExceptionType", "\"ExceptionType\" IN (1, 2)");
+
+                            t.HasCheckConstraint("CK_MachineCalendarExceptions_TimeRange", "\"StartTime\" < \"EndTime\"");
+                        });
+                });
+
             modelBuilder.Entity("ProductionPlanning.Web.Models.MachineOperationCapability", b =>
                 {
                     b.Property<int>("Id")
@@ -64,6 +141,39 @@ namespace ProductionPlanning.Web.Migrations
                         .IsUnique();
 
                     b.ToTable("KompatibilnostMasinaIOperacija", (string)null);
+                });
+
+            modelBuilder.Entity("ProductionPlanning.Web.Models.MachineWorkingInterval", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("DayOfWeek")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<TimeOnly>("EndTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("MachineId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<TimeOnly>("StartTime")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MachineId", "DayOfWeek", "StartTime");
+
+                    b.HasIndex("MachineId", "DayOfWeek", "StartTime", "EndTime")
+                        .IsUnique();
+
+                    b.ToTable("MachineWorkingIntervals", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_MachineWorkingIntervals_DayOfWeek", "\"DayOfWeek\" >= 0 AND \"DayOfWeek\" <= 6");
+
+                            t.HasCheckConstraint("CK_MachineWorkingIntervals_TimeRange", "\"StartTime\" < \"EndTime\"");
+                        });
                 });
 
             modelBuilder.Entity("ProductionPlanning.Web.Models.OperationDefinition", b =>
@@ -218,6 +328,28 @@ namespace ProductionPlanning.Web.Migrations
                         });
                 });
 
+            modelBuilder.Entity("ProductionPlanning.Web.Models.MachineBreak", b =>
+                {
+                    b.HasOne("ProductionPlanning.Web.Models.Machine", "Machine")
+                        .WithMany("Breaks")
+                        .HasForeignKey("MachineId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Machine");
+                });
+
+            modelBuilder.Entity("ProductionPlanning.Web.Models.MachineCalendarException", b =>
+                {
+                    b.HasOne("ProductionPlanning.Web.Models.Machine", "Machine")
+                        .WithMany("CalendarExceptions")
+                        .HasForeignKey("MachineId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Machine");
+                });
+
             modelBuilder.Entity("ProductionPlanning.Web.Models.MachineOperationCapability", b =>
                 {
                     b.HasOne("ProductionPlanning.Web.Models.Machine", "Machine")
@@ -235,6 +367,17 @@ namespace ProductionPlanning.Web.Migrations
                     b.Navigation("Machine");
 
                     b.Navigation("OperationDefinition");
+                });
+
+            modelBuilder.Entity("ProductionPlanning.Web.Models.MachineWorkingInterval", b =>
+                {
+                    b.HasOne("ProductionPlanning.Web.Models.Machine", "Machine")
+                        .WithMany("WorkingIntervals")
+                        .HasForeignKey("MachineId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Machine");
                 });
 
             modelBuilder.Entity("ProductionPlanning.Web.Models.PlannedProduction", b =>
@@ -288,9 +431,15 @@ namespace ProductionPlanning.Web.Migrations
 
             modelBuilder.Entity("ProductionPlanning.Web.Models.Machine", b =>
                 {
+                    b.Navigation("Breaks");
+
+                    b.Navigation("CalendarExceptions");
+
                     b.Navigation("OperationCapabilities");
 
                     b.Navigation("PlannedProductions");
+
+                    b.Navigation("WorkingIntervals");
                 });
 
             modelBuilder.Entity("ProductionPlanning.Web.Models.OperationDefinition", b =>
